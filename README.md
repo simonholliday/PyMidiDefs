@@ -75,13 +75,17 @@ pymididefs.ci.PROFILE_INQUIRY # 0x20
 
 ## Sources
 
-All definitions are sourced from the official MIDI specifications:
+All definitions are sourced from the official MIDI specifications published by
+the [MIDI Association](https://midi.org/specs):
 
-- MIDI 1.0 Detailed Specification (MMA/AMEI)
-- General MIDI Level 1 Specification
-- Standard MIDI File 1.0 Specification
-- M2-104-UM v1.1 — Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification
-- M2-101-UM v1.2 — MIDI-CI Specification
+- [MIDI 1.0 Detailed Specification](https://midi.org/midi-1-0-detailed-specification) (MMA/AMEI)
+- [General MIDI Level 1 Specification](https://midi.org/general-midi-level-1)
+- [Standard MIDI File 1.0 Specification](https://midi.org/standard-midi-files)
+- [M2-104-UM v1.1 — Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification](https://midi.org/universal-midi-packet-ump-and-midi-2-0-protocol-specification)
+- [M2-101-UM v1.2 — MIDI-CI Specification](https://midi.org/midi-ci-specification)
+
+Some specifications require a free [MIDI Association membership](https://midi.org/membership)
+to download.
 
 ## License
 
