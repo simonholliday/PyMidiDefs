@@ -96,7 +96,7 @@ def name_to_note (name: str) -> int:
 	# Split into note class (letter + optional accidental) and octave.
 	# Two-character classes: letter + '#' or 'b' (e.g. "C#", "Db").
 
-	if len(name) >= 2 and name[1] in ("#", "b"):
+	if name[1] in ("#", "b"):
 		note_class = name[:2].upper()
 		octave_str = name[2:]
 	else:

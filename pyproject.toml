@@ -34,6 +34,12 @@ classifiers = [
 	"Typing :: Typed",
 ]
 
+[project.optional-dependencies]
+dev = [
+	"pytest",
+	"mypy",
+]
+
 [project.urls]
 Homepage = "https://github.com/simonholliday/PyMidiDefs"
 Repository = "https://github.com/simonholliday/PyMidiDefs"
@@ -41,6 +47,9 @@ Issues = "https://github.com/simonholliday/PyMidiDefs/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
 
 [tool.mypy]
 strict = true
