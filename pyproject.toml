@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pymididefs"
+version = "0.1.0"
+description = "Comprehensive MIDI 1.0 and 2.0 constant definitions for Python."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+	{name = "Simon Inns"},
+]
+keywords = [
+	"midi",
+	"music",
+	"general-midi",
+	"midi2",
+	"constants",
+	"definitions",
+]
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"Intended Audience :: Developers",
+	"License :: OSI Approved :: MIT License",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3.13",
+	"Topic :: Multimedia :: Sound/Audio :: MIDI",
+	"Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/simonholliday/PyMidiDefs"
+Repository = "https://github.com/simonholliday/PyMidiDefs"
+Issues = "https://github.com/simonholliday/PyMidiDefs/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
