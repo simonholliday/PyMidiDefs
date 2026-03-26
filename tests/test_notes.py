@@ -1,5 +1,7 @@
 """Tests for pymididefs.notes — note constants and name/number conversion."""
 
+import pytest
+
 import pymididefs.notes
 
 
@@ -65,18 +67,12 @@ class TestNoteToName:
 		assert pymididefs.notes.note_to_name(61) == "C#4"
 
 	def test_out_of_range_low (self) -> None:
-		try:
+		with pytest.raises(ValueError):
 			pymididefs.notes.note_to_name(-1)
-			assert False, "Expected ValueError"
-		except ValueError:
-			pass
 
 	def test_out_of_range_high (self) -> None:
-		try:
+		with pytest.raises(ValueError):
 			pymididefs.notes.note_to_name(128)
-			assert False, "Expected ValueError"
-		except ValueError:
-			pass
 
 
 class TestNameToNote:
@@ -100,18 +96,12 @@ class TestNameToNote:
 		assert pymididefs.notes.name_to_note("  A4  ") == 69
 
 	def test_invalid_note_class (self) -> None:
-		try:
+		with pytest.raises(ValueError):
 			pymididefs.notes.name_to_note("X4")
-			assert False, "Expected ValueError"
-		except ValueError:
-			pass
 
 	def test_out_of_range (self) -> None:
-		try:
+		with pytest.raises(ValueError):
 			pymididefs.notes.name_to_note("C10")
-			assert False, "Expected ValueError"
-		except ValueError:
-			pass
 
 
 class TestRoundTrip:
