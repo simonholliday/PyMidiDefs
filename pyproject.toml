@@ -50,6 +50,3 @@ testpaths = ["tests"]
 
 [tool.mypy]
 strict = true
-
-[tool.mypy]
-strict = true
