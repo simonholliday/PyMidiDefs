@@ -3,7 +3,51 @@
 Comprehensive MIDI 1.0 and 2.0 constant definitions for Python.
 
 A zero-dependency reference library providing named constants, lookup
-dictionaries, and utility functions for the MIDI specification.
+dictionaries, and utility functions for the MIDI specification. Covers
+note numbers, Control Change assignments, General MIDI instruments and
+percussion, status bytes, Standard MIDI File meta-events, MIDI 2.0
+Universal MIDI Packet (UMP) message types, and MIDI-CI capability inquiry
+constants.
+
+## Why PyMidiDefs?
+
+If you're building a Python synthesiser, sequencer, DAW, MIDI controller
+interface, music generator, or any application that sends or receives MIDI
+messages, you need the same set of protocol constants: note numbers, CC
+assignments, program change values, status bytes. These numbers are defined
+by the MIDI specification and never change, yet most projects end up
+re-defining them from scratch or copying them from unreliable sources.
+
+PyMidiDefs gives you a single, authoritative package with every constant
+sourced directly from the official MIDI specifications. It
+has no runtime dependencies and works with any MIDI library or framework --
+python-rtmidi, mido, pygame.midi, or your own socket-level implementation.
+
+## About MIDI
+
+MIDI (Musical Instrument Digital Interface) is a technical standard for
+communication between electronic musical instruments, computers, and audio
+devices. It was conceived in the early 1980s by Dave Smith of Sequential
+Circuits and Ikutaro Kakehashi of Roland, who proposed a Universal
+Synthesizer Interface to allow instruments from different manufacturers to
+talk to each other. The MIDI 1.0 Detailed Specification was published in
+August 1983 by the International MIDI Association (now the MIDI
+Manufacturers Association, MMA) and has remained backwards-compatible ever
+since.
+
+General MIDI (GM), standardised in 1991, defined a common set of 128
+instrument sounds and a percussion key map so that a MIDI file created on
+one device would sound broadly similar on another. The Standard MIDI File
+(SMF) format, also formalised in the early 1990s, became the universal way
+to store and exchange MIDI sequences.
+
+In January 2020, the MIDI Association announced MIDI 2.0 -- the first major
+update to the protocol in nearly four decades. MIDI 2.0 introduces the
+Universal MIDI Packet (UMP) format with higher-resolution velocity and
+controller values, per-note controllers, and bidirectional communication via
+MIDI-CI (Capability Inquiry) for automatic device configuration, profile
+negotiation, and property exchange. MIDI 2.0 is a strict superset of MIDI
+1.0; all existing MIDI 1.0 definitions remain valid.
 
 ## Installation
 
