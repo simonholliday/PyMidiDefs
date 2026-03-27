@@ -133,4 +133,8 @@ to download.
 
 ## License
 
-MIT
+MIT -- you are free to use, copy, modify, merge, publish, distribute,
+sublicense, and sell copies of this software in any project, including
+commercial and closed-source applications. The only requirement is that
+the copyright notice and license text are included. See [LICENSE](LICENSE)
+for the full text.
