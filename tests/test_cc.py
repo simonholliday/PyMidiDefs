@@ -1,5 +1,7 @@
 """Tests for pymididefs.cc — MIDI Control Change number assignments."""
 
+import pytest
+
 import pymididefs.cc
 
 
@@ -45,3 +47,62 @@ class TestCCMap:
 		"""Each key in CC_MAP maps to a unique CC number."""
 		values = list(pymididefs.cc.CC_MAP.values())
 		assert len(values) == len(set(values))
+
+
+class TestPack14bit:
+
+	def test_zero (self) -> None:
+		assert pymididefs.cc.pack_14bit(0) == (0, 0)
+
+	def test_max (self) -> None:
+		assert pymididefs.cc.pack_14bit(16383) == (127, 127)
+
+	def test_pitch_bend_centre (self) -> None:
+		"""8192 is the pitch-bend centre value: MSB = 64, LSB = 0."""
+		assert pymididefs.cc.pack_14bit(8192) == (64, 0)
+
+	def test_byte_boundaries (self) -> None:
+		"""LSB rolls over into MSB at 128."""
+		assert pymididefs.cc.pack_14bit(127) == (0, 127)
+		assert pymididefs.cc.pack_14bit(128) == (1, 0)
+
+	def test_out_of_range_low (self) -> None:
+		with pytest.raises(ValueError):
+			pymididefs.cc.pack_14bit(-1)
+
+	def test_out_of_range_high (self) -> None:
+		with pytest.raises(ValueError):
+			pymididefs.cc.pack_14bit(16384)
+
+
+class TestUnpack14bit:
+
+	def test_zero (self) -> None:
+		assert pymididefs.cc.unpack_14bit(0, 0) == 0
+
+	def test_max (self) -> None:
+		assert pymididefs.cc.unpack_14bit(127, 127) == 16383
+
+	def test_pitch_bend_centre (self) -> None:
+		assert pymididefs.cc.unpack_14bit(64, 0) == 8192
+
+	def test_msb_out_of_range (self) -> None:
+		with pytest.raises(ValueError):
+			pymididefs.cc.unpack_14bit(128, 0)
+		with pytest.raises(ValueError):
+			pymididefs.cc.unpack_14bit(-1, 0)
+
+	def test_lsb_out_of_range (self) -> None:
+		with pytest.raises(ValueError):
+			pymididefs.cc.unpack_14bit(0, 128)
+		with pytest.raises(ValueError):
+			pymididefs.cc.unpack_14bit(0, -1)
+
+
+class TestRoundTrip14bit:
+
+	def test_all_14bit_values (self) -> None:
+		"""unpack_14bit(*pack_14bit(v)) == v for every v in 0..=16383."""
+		for v in range(16384):
+			msb, lsb = pymididefs.cc.pack_14bit(v)
+			assert pymididefs.cc.unpack_14bit(msb, lsb) == v

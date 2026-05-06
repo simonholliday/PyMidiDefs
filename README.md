@@ -60,7 +60,8 @@ pip install git+https://github.com/simonholliday/PyMidiDefs.git
 | Module | Description |
 |--------|-------------|
 | `pymididefs.notes` | MIDI note numbers (C-1 to G9) and name/number conversion |
-| `pymididefs.cc` | Control Change number assignments (0-127) |
+| `pymididefs.cc` | Control Change number assignments (0-127), plus 14-bit pack/unpack helpers |
+| `pymididefs.rpn` | Standard Registered Parameter Numbers (RPN) and the 14-bit parameter conventions shared with NRPN |
 | `pymididefs.drums` | General MIDI Level 1 percussion key map |
 | `pymididefs.gm` | General MIDI Level 1 instrument program numbers and families |
 | `pymididefs.status` | MIDI 1.0 status bytes (channel voice, system common, system real-time) |
@@ -101,6 +102,23 @@ pymididefs.gm.GM_INSTRUMENT_NAMES[40]    # "Violin"
 pymididefs.gm.GM_INSTRUMENT_MAP["flute"]  # 73
 ```
 
+### RPN and 14-bit values
+
+```python
+import pymididefs.rpn
+import pymididefs.cc
+
+# Standard Registered Parameter Numbers
+pymididefs.rpn.PITCH_BEND_SENSITIVITY  # 0
+pymididefs.rpn.MODULATION_DEPTH_RANGE  # 5  (added in GM2)
+pymididefs.rpn.NULL_PARAMETER          # 16383  (sent as MSB=127, LSB=127)
+
+# 14-bit pack/unpack — works for any MIDI 1.0 14-bit value
+# (Bank Select, Data Entry, RPN/NRPN parameter numbers, pitch bend, ...)
+pymididefs.cc.pack_14bit(8192)         # (64, 0)   pitch bend centre
+pymididefs.cc.unpack_14bit(64, 0)      # 8192
+```
+
 ### MIDI 2.0
 
 ```python
@@ -124,6 +142,7 @@ the [MIDI Association](https://midi.org/specs):
 
 - [MIDI 1.0 Detailed Specification](https://midi.org/midi-1-0-detailed-specification) (MMA/AMEI)
 - [General MIDI Level 1 Specification](https://midi.org/general-midi-level-1)
+- [General MIDI 2 Specification](https://midi.org/general-midi-2)
 - [Standard MIDI File 1.0 Specification](https://midi.org/standard-midi-files)
 - [M2-104-UM v1.1 — Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification](https://midi.org/universal-midi-packet-ump-and-midi-2-0-protocol-specification)
 - [M2-101-UM v1.2 — MIDI-CI Specification](https://midi.org/midi-ci-specification)

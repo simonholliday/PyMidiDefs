@@ -229,3 +229,56 @@ CC_MAP: typing.Final[dict[str, int]] = {
 	"mono_mode_on":             MONO_MODE_ON,
 	"poly_mode_on":             POLY_MODE_ON,
 }
+
+
+# ── 14-bit value pack/unpack ─────────────────────────────────────────────────
+# Many MIDI 1.0 message types — Bank Select, Data Entry, RPN/NRPN parameter
+# numbers, pitch bend, song position pointer — split a 14-bit value across
+# two 7-bit MSB/LSB bytes.  These helpers convert between the integer form
+# and the wire-format byte pair.
+
+def pack_14bit (value: int) -> tuple[int, int]:
+
+	"""Split a 14-bit integer (0–16383) into ``(MSB, LSB)`` bytes.
+
+	Each returned byte is in the 7-bit range 0–127.  The tuple ordering
+	``(MSB, LSB)`` is the logical pairing — wire-transmission order is
+	message-dependent (Bank Select and RPN/NRPN parameter selection send MSB
+	first, but pitch bend sends LSB first).
+
+	>>> pack_14bit(0)
+	(0, 0)
+	>>> pack_14bit(16383)
+	(127, 127)
+	>>> pack_14bit(8192)
+	(64, 0)
+	"""
+
+	if not 0 <= value <= 16383:
+		raise ValueError(
+			f"14-bit value must be 0–16383, got {value}"
+		)
+
+	return (value >> 7) & 0x7F, value & 0x7F
+
+
+def unpack_14bit (msb: int, lsb: int) -> int:
+
+	"""Combine an ``(MSB, LSB)`` byte pair into a 14-bit integer (0–16383).
+
+	Both inputs must be in the 7-bit range 0–127.
+
+	>>> unpack_14bit(0, 0)
+	0
+	>>> unpack_14bit(127, 127)
+	16383
+	>>> unpack_14bit(64, 0)
+	8192
+	"""
+
+	if not 0 <= msb <= 127:
+		raise ValueError(f"MSB must be 0–127, got {msb}")
+	if not 0 <= lsb <= 127:
+		raise ValueError(f"LSB must be 0–127, got {lsb}")
+
+	return (msb << 7) | lsb
