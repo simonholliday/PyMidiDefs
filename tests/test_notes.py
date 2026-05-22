@@ -135,3 +135,53 @@ class TestSemitoneMap:
 		expected = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 		for name, offset in expected.items():
 			assert pymididefs.notes.SEMITONE_MAP[name] == offset
+
+
+class TestFlatAliases:
+
+	"""Flat enharmonic aliases — DB, EB, GB, AB, BB at each octave."""
+
+	def test_flats_equal_sharps_octave_4 (self) -> None:
+		"""Each flat in octave 4 equals its sharp equivalent."""
+		assert pymididefs.notes.DB4 == pymididefs.notes.CS4 == 61
+		assert pymididefs.notes.EB4 == pymididefs.notes.DS4 == 63
+		assert pymididefs.notes.GB4 == pymididefs.notes.FS4 == 66
+		assert pymididefs.notes.AB4 == pymididefs.notes.GS4 == 68
+		assert pymididefs.notes.BB4 == pymididefs.notes.AS4 == 70
+
+	def test_octave_negative_one (self) -> None:
+		"""All five flats exist for the lowest octave."""
+		assert pymididefs.notes.DB_NEG1 == 1
+		assert pymididefs.notes.EB_NEG1 == 3
+		assert pymididefs.notes.GB_NEG1 == 6
+		assert pymididefs.notes.AB_NEG1 == 8
+		assert pymididefs.notes.BB_NEG1 == 10
+
+	def test_octave_nine_partial (self) -> None:
+		"""Octave 9 has only the flats whose sharp equivalent fits in 0–127."""
+		assert pymididefs.notes.DB9 == 121
+		assert pymididefs.notes.EB9 == 123
+		assert pymididefs.notes.GB9 == 126
+
+		# AB9 (would need GS9 = 128) and BB9 (would need AS9 = 130) are
+		# deliberately undefined — they fall outside the MIDI range.
+		assert not hasattr(pymididefs.notes, "AB9")
+		assert not hasattr(pymididefs.notes, "BB9")
+
+	def test_all_flats_present_full_octaves (self) -> None:
+		"""DB through BB exist for every full octave (-1 through 8)."""
+
+		full_octaves = ["_NEG1", "0", "1", "2", "3", "4", "5", "6", "7", "8"]
+		flats = ["DB", "EB", "GB", "AB", "BB"]
+
+		for octave in full_octaves:
+			for flat in flats:
+				name = f"{flat}{octave}"
+				assert hasattr(pymididefs.notes, name), f"Missing {name}"
+
+	def test_round_trip_via_name_to_note (self) -> None:
+		"""A flat constant equals the result of name_to_note on its flat name."""
+
+		assert pymididefs.notes.EB4 == pymididefs.notes.name_to_note("Eb4")
+		assert pymididefs.notes.BB2 == pymididefs.notes.name_to_note("Bb2")
+		assert pymididefs.notes.GB5 == pymididefs.notes.name_to_note("Gb5")

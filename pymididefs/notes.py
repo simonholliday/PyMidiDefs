@@ -3,13 +3,16 @@
 Convention: **C4 = 60** (Middle C), matching the MIDI Manufacturers Association
 standard and most DAWs (Ableton, Logic, Reaper, FL Studio).
 
-Notes are named ``<Pitch><Octave>`` for naturals and ``<Pitch>S<Octave>`` for
-sharps::
+Notes are named ``<Pitch><Octave>`` for naturals, ``<Pitch>S<Octave>`` for
+sharps, and ``<Pitch>B<Octave>`` for flats.  Flats (``DB``, ``EB``, ``GB``,
+``AB``, ``BB``) are enharmonic aliases of the sharp constants —
+``EB4 == DS4`` (both are 63)::
 
 	import pymididefs.notes
 	pymididefs.notes.C4    # 60  (Middle C)
 	pymididefs.notes.A4    # 69  (Concert pitch, 440 Hz)
 	pymididefs.notes.CS3   # 49  (C#3)
+	pymididefs.notes.EB4   # 63  (Eb4 / D#4)
 
 For string-based access use :func:`name_to_note` and :func:`note_to_name`::
 
@@ -297,3 +300,90 @@ E9  = 124
 F9  = 125
 FS9 = 126
 G9  = 127
+
+
+# ── Flat aliases ────────────────────────────────────────────────────────────
+# Enharmonic flat spellings of the sharp constants above.  Musicians thinking
+# in flat keys (Bb, Eb, Ab, Db, Gb) can use these familiar names instead of
+# the sharp equivalents — ``EB4`` is exactly ``DS4`` (63), ``BB2`` is exactly
+# ``AS2`` (46), and so on.
+#
+# Fb (= E) and Cb (= B one octave lower) are deliberately omitted: they cross
+# octave boundaries in unintuitive ways and are rarely needed in practice.
+# Use ``E<n>`` and ``B<n-1>`` instead.
+
+# Octave -1
+DB_NEG1 = CS_NEG1
+EB_NEG1 = DS_NEG1
+GB_NEG1 = FS_NEG1
+AB_NEG1 = GS_NEG1
+BB_NEG1 = AS_NEG1
+
+# Octave 0
+DB0 = CS0
+EB0 = DS0
+GB0 = FS0
+AB0 = GS0
+BB0 = AS0
+
+# Octave 1
+DB1 = CS1
+EB1 = DS1
+GB1 = FS1
+AB1 = GS1
+BB1 = AS1
+
+# Octave 2
+DB2 = CS2
+EB2 = DS2
+GB2 = FS2
+AB2 = GS2
+BB2 = AS2
+
+# Octave 3
+DB3 = CS3
+EB3 = DS3
+GB3 = FS3
+AB3 = GS3
+BB3 = AS3
+
+# Octave 4  (middle C octave)
+DB4 = CS4
+EB4 = DS4
+GB4 = FS4
+AB4 = GS4
+BB4 = AS4
+
+# Octave 5
+DB5 = CS5
+EB5 = DS5
+GB5 = FS5
+AB5 = GS5
+BB5 = AS5
+
+# Octave 6
+DB6 = CS6
+EB6 = DS6
+GB6 = FS6
+AB6 = GS6
+BB6 = AS6
+
+# Octave 7
+DB7 = CS7
+EB7 = DS7
+GB7 = FS7
+AB7 = GS7
+BB7 = AS7
+
+# Octave 8
+DB8 = CS8
+EB8 = DS8
+GB8 = FS8
+AB8 = GS8
+BB8 = AS8
+
+# Octave 9  (partial — only flats whose sharp equivalent fits in MIDI 0–127)
+DB9 = CS9
+EB9 = DS9
+GB9 = FS9
+# AB9 would need GS9 (128) and BB9 would need AS9 (130) — both out of range.
