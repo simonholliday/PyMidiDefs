@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "pymididefs"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Comprehensive MIDI 1.0 and 2.0 constant definitions for Python."
 readme = "README.md"
 license = "MIT"
@@ -44,6 +44,9 @@ dev = [
 Homepage = "https://github.com/simonholliday/PyMidiDefs"
 Repository = "https://github.com/simonholliday/PyMidiDefs"
 Issues = "https://github.com/simonholliday/PyMidiDefs/issues"
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

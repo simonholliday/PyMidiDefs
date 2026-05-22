@@ -16,9 +16,18 @@ ump     — MIDI 2.0 Universal MIDI Packet message types and constants.
 ci      — MIDI 2.0 Capability Inquiry (MIDI-CI) constants.
 """
 
+import importlib.metadata
+
 import pymididefs.notes
 
-__version__ = "0.2.0"
+# Version is derived from the latest git tag at build time via hatch-vcs;
+# `importlib.metadata` then reads it from the installed package metadata.
+# The fallback only fires if someone runs from a raw source checkout without
+# installing the package (e.g. directly from a git clone with no `pip install`).
+try:
+	__version__ = importlib.metadata.version("pymididefs")
+except importlib.metadata.PackageNotFoundError:
+	__version__ = "0.0.0+unknown"
 
 # Convenience re-exports for the most common operations.
 note_to_name = pymididefs.notes.note_to_name
