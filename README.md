@@ -94,6 +94,8 @@ pymididefs.cc.CC_MAP["pan"]    # 10
 pymididefs.drums.KICK_1              # 36
 pymididefs.drums.HI_HAT_CLOSED       # 42
 pymididefs.drums.GM_DRUM_MAP["snare_1"]  # 38
+pymididefs.drums.KICK                # 36  (unnumbered "primary" alias of KICK_1)
+pymididefs.drums.GM_DRUM_PRIMARY_ALIASES["crash"]  # 49
 
 # GM instruments
 pymididefs.gm.ACOUSTIC_GRAND_PIANO   # 0

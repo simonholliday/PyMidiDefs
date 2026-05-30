@@ -48,3 +48,27 @@ class TestGMDrumMap:
 	def test_count (self) -> None:
 		"""GM Level 1 defines 61 percussion instruments (notes 27–87)."""
 		assert len(pymididefs.drums.GM_DRUM_MAP) == 61
+
+
+class TestPrimaryAliases:
+
+	def test_constants_point_to_primary (self) -> None:
+		"""Unnumbered names alias the GM-designated primary (the '1' variant)."""
+		assert pymididefs.drums.KICK == pymididefs.drums.KICK_1 == 36
+		assert pymididefs.drums.SNARE == pymididefs.drums.SNARE_1 == 38
+		assert pymididefs.drums.CRASH == pymididefs.drums.CRASH_1 == 49
+		assert pymididefs.drums.RIDE == pymididefs.drums.RIDE_1 == 51
+
+	def test_alias_map (self) -> None:
+		"""GM_DRUM_PRIMARY_ALIASES maps the four bare names to their primary note."""
+		assert pymididefs.drums.GM_DRUM_PRIMARY_ALIASES == {
+			"kick": 36,
+			"snare": 38,
+			"crash": 49,
+			"ride": 51,
+		}
+
+	def test_aliases_kept_separate_from_key_map (self) -> None:
+		"""The bare names stay OUT of GM_DRUM_MAP, which is one name per note."""
+		for name in pymididefs.drums.GM_DRUM_PRIMARY_ALIASES:
+			assert name not in pymididefs.drums.GM_DRUM_MAP

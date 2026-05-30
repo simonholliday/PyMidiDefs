@@ -16,6 +16,12 @@ Two ways to use this module::
 	# As a lookup dictionary
 	pymididefs.drums.GM_DRUM_MAP["kick_1"]  # 36
 
+The four instruments GM defines in numbered pairs — kick, snare, crash, ride —
+also have unnumbered *primary aliases* pointing to the "1" variant: the
+``KICK`` / ``SNARE`` / ``CRASH`` / ``RIDE`` constants and the
+``GM_DRUM_PRIMARY_ALIASES`` lookup, kept separate from ``GM_DRUM_MAP`` so the
+canonical key map stays one name per note.
+
 Source: General MIDI Level 1 Specification — Percussion Key Map.
 Note range: 27 (High Q) through 87 (Open Surdo).
 Channel: 10 (1-indexed) / 9 (0-indexed).
@@ -185,4 +191,31 @@ GM_DRUM_MAP: typing.Final[dict[str, int]] = {
 	"castanets":        CASTANETS,
 	"mute_surdo":       MUTE_SURDO,
 	"open_surdo":       OPEN_SURDO,
+}
+
+
+# ── Primary aliases ──────────────────────────────────────────────────────────
+# General MIDI defines four instruments in numbered pairs — two kicks, two
+# snares, two crashes, two rides.  These unnumbered aliases point to the
+# GM-designated *primary* (the "1" variant): Bass Drum 1, Acoustic Snare,
+# Crash Cymbal 1, Ride Cymbal 1 — the notes every GM kit treats as the main
+# kick / snare / crash / ride.  Use ``KICK`` when you just want "the kick"
+# rather than choosing between the two.
+#
+# Kept separate from GM_DRUM_MAP, which stays one name per note (the canonical
+# percussion key map).  Only these four instruments come in numbered pairs; the
+# single-instance voices (closed/open/pedal hi-hat, side stick, cowbell, …) are
+# already unnumbered.  Ambiguous cases with no clear primary (e.g. the six toms)
+# are deliberately not aliased.
+
+KICK  = KICK_1   # Bass Drum 1 (36)
+SNARE = SNARE_1  # Acoustic Snare (38)
+CRASH = CRASH_1  # Crash Cymbal 1 (49)
+RIDE  = RIDE_1   # Ride Cymbal 1 (51)
+
+GM_DRUM_PRIMARY_ALIASES: typing.Final[dict[str, int]] = {
+	"kick":  KICK_1,
+	"snare": SNARE_1,
+	"crash": CRASH_1,
+	"ride":  RIDE_1,
 }
