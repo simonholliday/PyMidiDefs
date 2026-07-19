@@ -48,6 +48,16 @@ Issues = "https://github.com/simonholliday/PyMidiDefs/issues"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.build.targets.sdist]
+# Ship the package, its tests, and the standard project metadata; keep
+# local editor/agent config and caches out of the published source archive.
+exclude = [
+	".claude",
+	".github",
+	".mypy_cache",
+	".pytest_cache",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
