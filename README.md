@@ -52,6 +52,14 @@ negotiation, and property exchange. MIDI 2.0 is a strict superset of MIDI
 ## Installation
 
 ```bash
+pip install pymididefs
+```
+
+Requires Python 3.10 or later. There are no runtime dependencies.
+
+To install the latest unreleased code straight from the repository:
+
+```bash
 pip install git+https://github.com/simonholliday/PyMidiDefs.git
 ```
 
@@ -157,5 +165,6 @@ to download.
 MIT -- you are free to use, copy, modify, merge, publish, distribute,
 sublicense, and sell copies of this software in any project, including
 commercial and closed-source applications. The only requirement is that you include the
-LICENSE file when redistributing the software. See [LICENSE](LICENSE)
+LICENSE file when redistributing the software. See
+[LICENSE](https://github.com/simonholliday/PyMidiDefs/blob/main/LICENSE)
 for the full text.
