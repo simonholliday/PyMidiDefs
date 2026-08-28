@@ -21,6 +21,15 @@ an unrecognised type byte on ordinary input:
   convention that many sequencers wrote and some still do, and it is the one an
   SMF reader is most likely to actually encounter.
 
+How far each of the three has actually been checked, since this package is only
+worth using if its numbers are right:
+
+* 0x09 and 0x21 are corroborated by ``mido``'s Standard MIDI File parser, which
+  reads both from real files.
+* **0x08 is not corroborated by anything to hand.**  ``mido`` does not implement
+  it at all.  It is recorded here from secondary sources and should be confirmed
+  against RP-019 itself before anybody relies on it.
+
 Sources: Standard MIDI File (SMF) 1.0 Specification — Meta-Event Definitions;
 MMA RP-019 (0x08, 0x09); de facto practice (0x21).
 """
@@ -46,14 +55,15 @@ CUE_POINT           = 0x07  # Cue Point              (description of an event in
 # ── Text events assigned by RP-019 (0x08–0x09) ───────────────────────────────
 # Inside SMF 1.0's reserved text range, named by a later MMA recommendation.
 
-PROGRAM_NAME        = 0x08  # Program Name           (the patch this track calls for)
-DEVICE_NAME         = 0x09  # Device Name            (the port or instrument it plays on)
+PROGRAM_NAME        = 0x08  # Program Name    (the patch this track calls for)
+                            # UNCONFIRMED — see the module docstring before relying on this
+DEVICE_NAME         = 0x09  # Device Name     (the port or instrument it plays on)
 
 
 # ── Control events ───────────────────────────────────────────────────────────
 
 CHANNEL_PREFIX      = 0x20  # MIDI Channel Prefix    (1 byte: channel 0–15)
-MIDI_PORT           = 0x21  # MIDI Port              (1 byte; obsolete, not in any spec)
+MIDI_PORT           = 0x21  # MIDI Port              (1 byte; obsolete, in no spec, but widely written)
 END_OF_TRACK        = 0x2F  # End of Track           (mandatory, 0 data bytes)
 
 
