@@ -10,14 +10,30 @@ defined here, then a variable-length quantity indicating the data length.
 	pymididefs.meta.TEMPO           # 0x51
 	pymididefs.meta.TIME_SIGNATURE  # 0x58
 
-Source: Standard MIDI File (SMF) 1.0 Specification — Meta-Event Definitions.
+Most of these come from the SMF 1.0 specification.  Three do not, and are here
+because files in the wild contain them — a reader that does not know them meets
+an unrecognised type byte on ordinary input:
+
+* ``PROGRAM_NAME`` (0x08) and ``DEVICE_NAME`` (0x09) are text events assigned by
+  MMA Recommended Practice RP-019.  SMF 1.0 reserves 0x01–0x0F for text and
+  leaves these two unassigned; RP-019 names them.
+* ``MIDI_PORT`` (0x21) is not defined by any specification.  It is an obsolete
+  convention that many sequencers wrote and some still do, and it is the one an
+  SMF reader is most likely to actually encounter.
+
+Sources: Standard MIDI File (SMF) 1.0 Specification — Meta-Event Definitions;
+MMA RP-019 (0x08, 0x09); de facto practice (0x21).
 """
+
+
+# ── Sequence number (0x00) ───────────────────────────────────────────────────
+
+SEQUENCE_NUMBER     = 0x00  # Sequence Number        (optional, 2 bytes: MSB, LSB)
 
 
 # ── Text events (0x01–0x07) ──────────────────────────────────────────────────
 # Variable-length text encoded as ASCII (or in practice, Latin-1 / UTF-8).
 
-SEQUENCE_NUMBER     = 0x00  # Sequence Number        (optional, 2 bytes: MSB, LSB)
 TEXT                = 0x01  # Text Event             (any text annotation)
 COPYRIGHT           = 0x02  # Copyright Notice       (should be in first track, at time 0)
 TRACK_NAME          = 0x03  # Sequence/Track Name
@@ -27,9 +43,17 @@ MARKER              = 0x06  # Marker                 (rehearsal letter, section 
 CUE_POINT           = 0x07  # Cue Point              (description of an event in a film/video)
 
 
+# ── Text events assigned by RP-019 (0x08–0x09) ───────────────────────────────
+# Inside SMF 1.0's reserved text range, named by a later MMA recommendation.
+
+PROGRAM_NAME        = 0x08  # Program Name           (the patch this track calls for)
+DEVICE_NAME         = 0x09  # Device Name            (the port or instrument it plays on)
+
+
 # ── Control events ───────────────────────────────────────────────────────────
 
 CHANNEL_PREFIX      = 0x20  # MIDI Channel Prefix    (1 byte: channel 0–15)
+MIDI_PORT           = 0x21  # MIDI Port              (1 byte; obsolete, not in any spec)
 END_OF_TRACK        = 0x2F  # End of Track           (mandatory, 0 data bytes)
 
 

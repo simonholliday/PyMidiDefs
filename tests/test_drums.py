@@ -1,4 +1,4 @@
-"""Tests for pymididefs.drums — General MIDI Level 1 percussion key map."""
+"""Tests for pymididefs.drums — the General MIDI percussion key map."""
 
 import pymididefs.drums
 
@@ -46,8 +46,22 @@ class TestGMDrumMap:
 		assert len(values) == len(set(values))
 
 	def test_count (self) -> None:
-		"""GM Level 1 defines 61 percussion instruments (notes 27–87)."""
+		"""The map holds 61 instruments: 47 from GM Level 1 and 14 extended."""
 		assert len(pymididefs.drums.GM_DRUM_MAP) == 61
+
+	def test_gm_level_1_block_is_complete_and_contiguous (self) -> None:
+		"""GM Level 1 percussion is notes 35–81, every one of them named.
+
+		The fourteen sounds outside that block came from Roland GS and reached
+		General MIDI through GM2, so they are not guaranteed on a GM Level 1
+		device.  Pinning the boundary keeps the module's docstring honest about
+		which of its notes carry that guarantee.
+		"""
+		notes = set(pymididefs.drums.GM_DRUM_MAP.values())
+
+		assert {n for n in notes if 35 <= n <= 81} == set(range(35, 82))
+		assert sorted(n for n in notes if n < 35) == [27, 28, 29, 30, 31, 32, 33, 34]
+		assert sorted(n for n in notes if n > 81) == [82, 83, 84, 85, 86, 87]
 
 
 class TestPrimaryAliases:

@@ -8,10 +8,10 @@ Modules
 notes   — MIDI note numbers and name/number conversion.
 cc      — Control Change number assignments and 14-bit pack/unpack helpers.
 rpn     — Standard Registered Parameter Numbers and the 14-bit parameter conventions shared with NRPN.
-drums   — General MIDI Level 1 percussion key map.
+drums   — General MIDI percussion key map: GM Level 1, plus the extended GS/GM2 sounds.
 gm      — General MIDI Level 1 instrument program numbers and families.
 status  — MIDI 1.0 status bytes (channel voice, system common, system real-time).
-meta    — Standard MIDI File meta-event type bytes.
+meta    — Standard MIDI File meta-event type bytes, including the ones only real files carry.
 ump     — MIDI 2.0 Universal MIDI Packet message types and constants.
 ci      — MIDI 2.0 Capability Inquiry (MIDI-CI) constants.
 """

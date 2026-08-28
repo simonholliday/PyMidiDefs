@@ -1,9 +1,16 @@
-"""General MIDI Level 1 percussion key map.
+"""General MIDI percussion key map, with the common extended sounds.
 
 Standard MIDI percussion assignments for channel 10 (0-indexed channel 9).
-These note numbers are defined by the General MIDI Level 1 specification and
-are supported by virtually all GM-compatible instruments, drum machines, and
-DAWs.
+
+**Notes 35–81 are General MIDI Level 1** and are supported by virtually all
+GM-compatible instruments, drum machines, and DAWs.
+
+**Notes 27–34 and 82–87 are not.** They are the fourteen extended sounds that
+originated in Roland GS and were later carried into General MIDI 2, and they
+bracket the GM Level 1 block on either side.  They are widely implemented —
+GS, GM2 and XG devices all have them — but a GM Level 1 device is not required
+to, and will simply be silent.  Check the target before using ``HIGH_Q``,
+``CASTANETS`` or any of their neighbours.
 
 Two ways to use this module::
 
@@ -22,7 +29,8 @@ also have unnumbered *primary aliases* pointing to the "1" variant: the
 ``GM_DRUM_PRIMARY_ALIASES`` lookup, kept separate from ``GM_DRUM_MAP`` so the
 canonical key map stays one name per note.
 
-Source: General MIDI Level 1 Specification — Percussion Key Map.
+Sources: General MIDI Level 1 Specification — Percussion Key Map (35–81);
+General MIDI 2 Specification and Roland GS (27–34 and 82–87).
 Note range: 27 (High Q) through 87 (Open Surdo).
 Channel: 10 (1-indexed) / 9 (0-indexed).
 """
@@ -30,10 +38,12 @@ Channel: 10 (1-indexed) / 9 (0-indexed).
 import typing
 
 
-# ── GM Level 1 Percussion Key Map (notes 27–87) ─────────────────────────────
-# Organised by instrument family for readability.
+# ── Percussion Key Map (notes 27–87) ─────────────────────────────────────────
+# Organised by instrument family for readability.  Notes 35–81 are GM Level 1;
+# the groups marked "extended" below are GS / GM2 and may be silent on a
+# GM Level 1 device.
 
-# Electronic percussion / effects (27–34)
+# Electronic percussion / effects (27–34) — extended, not GM Level 1
 HIGH_Q              = 27  # High Q
 SLAP                = 28  # Slap
 SCRATCH_PUSH        = 29  # Scratch Push
@@ -100,7 +110,7 @@ LOW_WOODBLOCK       = 77  # Low Wood Block
 MUTE_CUICA          = 78  # Mute Cuica
 OPEN_CUICA          = 79  # Open Cuica
 
-# Triangle and bells (80–87)
+# Triangle and bells (80–87) — 82–87 are extended, not GM Level 1
 MUTE_TRIANGLE       = 80  # Mute Triangle
 OPEN_TRIANGLE       = 81  # Open Triangle
 SHAKER              = 82  # Shaker

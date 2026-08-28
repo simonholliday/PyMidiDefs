@@ -35,6 +35,37 @@ class TestCCConstants:
 			assert 0 <= value <= 127, f"CC_MAP[{name!r}] = {value} is out of range"
 
 
+	def test_every_defined_msb_has_its_lsb (self) -> None:
+		"""A controller in 0–31 that we name must have its low byte named too.
+
+		The two halves of a 14-bit controller are only useful together, so a
+		missing LSB is a gap rather than a stylistic choice.  Checking the rule
+		rather than a handful of pairs is what catches the next one.
+		"""
+		numbers = set(pymididefs.cc.CC_MAP.values())
+
+		for msb in sorted(n for n in numbers if n <= 31):
+			assert msb + 32 in numbers, (
+				f"CC {msb} is defined but its LSB at CC {msb + 32} is missing"
+			)
+
+
+	def test_only_undefined_controllers_are_absent (self) -> None:
+		"""The controllers we leave out are exactly the ones with no standard name.
+
+		These are the numbers MIDI 1.0 Table III leaves undefined, plus the LSB
+		slot belonging to each undefined controller below 32 — the low byte of a
+		controller that does not exist does not exist either.  Anything else
+		missing from the map is an omission, not a decision.
+		"""
+		undefined = {3, 9, 14, 15, *range(20, 32), 85, 86, 87, 89, 90, *range(102, 120)}
+		expected_absent = undefined | {msb + 32 for msb in undefined if msb < 32}
+
+		absent = set(range(128)) - set(pymididefs.cc.CC_MAP.values())
+
+		assert absent == expected_absent
+
+
 class TestCCMap:
 
 	def test_snake_case_lookup (self) -> None:

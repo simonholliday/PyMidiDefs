@@ -1,9 +1,11 @@
 """MIDI 1.0 status bytes.
 
 Status bytes occupy the range 0x80–0xFF and identify the type of MIDI message.
-Channel Voice and Channel Mode messages use the upper nibble as the message
-type and the lower nibble as the channel number (0–15).  System messages use
-the full byte.
+Channel Voice messages use the upper nibble as the message type and the lower
+nibble as the channel number (0–15).  System messages use the full byte.
+
+Channel Mode messages have no status byte of their own: they are Control
+Change (0xB0) with controller numbers 120–127, and live in ``pymididefs.cc``.
 
 ::
 

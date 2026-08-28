@@ -2,9 +2,17 @@
 
 The MIDI specification defines 128 controller numbers (0–127).  This module
 provides named constants for all controllers that have a defined function in
-the MIDI 1.0 Detailed Specification.  Undefined/reserved numbers (3, 9, 14–15,
-20–31, 85–90, 102–119) are omitted — they are available for general-purpose
-use and do not have standard names.
+the MIDI 1.0 Detailed Specification.
+
+Two kinds of number are therefore absent, and the rule is worth stating rather
+than the list, which falls out of date every time the map changes:
+
+* Controllers the specification leaves **undefined** — they are available for
+  general-purpose use and have no standard name.
+* The **LSB slot belonging to an undefined controller**.  CC 32–63 are the low
+  bytes of CC 0–31, so the low byte of an undefined controller is undefined too.
+
+Every other controller in 0–127 is here.
 
 Two ways to use this module::
 
@@ -49,8 +57,9 @@ GENERAL_PURPOSE_4   = 19  # General Purpose Controller 4
 
 
 # ── LSB Controllers (32–63) ──────────────────────────────────────────────────
-# Low-resolution counterparts for CC 0–31.
-# Only the most commonly referenced LSB values are named here.
+# Low bytes for CC 0–31, at MSB + 32.  Present for every controller whose MSB
+# is defined; the LSB of an undefined controller (35, 41, 46–47, 52–63) is
+# undefined in turn and is omitted.
 
 BANK_SELECT_LSB         = 32  # Bank Select LSB
 MODULATION_WHEEL_LSB    = 33  # Modulation Wheel LSB
@@ -66,6 +75,12 @@ PAN_LSB                 = 42  # Pan LSB
 EXPRESSION_LSB          = 43  # Expression LSB
 EFFECT_CONTROL_1_LSB    = 44  # Effect Control 1 LSB
 EFFECT_CONTROL_2_LSB    = 45  # Effect Control 2 LSB
+# CC 46–47: Undefined LSB
+GENERAL_PURPOSE_1_LSB   = 48  # General Purpose Controller 1 LSB
+GENERAL_PURPOSE_2_LSB   = 49  # General Purpose Controller 2 LSB
+GENERAL_PURPOSE_3_LSB   = 50  # General Purpose Controller 3 LSB
+GENERAL_PURPOSE_4_LSB   = 51  # General Purpose Controller 4 LSB
+# CC 52–63: Undefined LSB
 
 
 # ── Switch Controllers (64–69) ───────────────────────────────────────────────
@@ -102,11 +117,16 @@ GENERAL_PURPOSE_7   = 82  # General Purpose Controller 7
 GENERAL_PURPOSE_8   = 83  # General Purpose Controller 8
 
 
-# ── Effects Send Levels (91–95) ──────────────────────────────────────────────
-# CC 84 is Portamento Control; CC 85–90 are undefined.
+# ── Portamento Control and High Resolution Velocity (84–90) ──────────────────
 
-PORTAMENTO_CONTROL  = 84  # Portamento Control (source note for portamento)
-# CC 85–90: Undefined
+PORTAMENTO_CONTROL              = 84  # Portamento Control (source note for portamento)
+# CC 85–87: Undefined
+HIGH_RESOLUTION_VELOCITY_PREFIX = 88  # High Resolution Velocity Prefix
+# CC 89–90: Undefined
+
+
+# ── Effects Send Levels (91–95) ──────────────────────────────────────────────
+
 REVERB_DEPTH        = 91  # Effects 1 Depth (default: Reverb Send Level)
 TREMOLO_DEPTH       = 92  # Effects 2 Depth (default: Tremolo Depth)
 CHORUS_DEPTH        = 93  # Effects 3 Depth (default: Chorus Send Level)
@@ -176,6 +196,10 @@ CC_MAP: typing.Final[dict[str, int]] = {
 	"expression_lsb":           EXPRESSION_LSB,
 	"effect_control_1_lsb":     EFFECT_CONTROL_1_LSB,
 	"effect_control_2_lsb":     EFFECT_CONTROL_2_LSB,
+	"general_purpose_1_lsb":    GENERAL_PURPOSE_1_LSB,
+	"general_purpose_2_lsb":    GENERAL_PURPOSE_2_LSB,
+	"general_purpose_3_lsb":    GENERAL_PURPOSE_3_LSB,
+	"general_purpose_4_lsb":    GENERAL_PURPOSE_4_LSB,
 
 	# Switch controllers
 	"sustain_pedal":        SUSTAIN_PEDAL,
@@ -203,8 +227,11 @@ CC_MAP: typing.Final[dict[str, int]] = {
 	"general_purpose_7":    GENERAL_PURPOSE_7,
 	"general_purpose_8":    GENERAL_PURPOSE_8,
 
+	# Portamento control and high resolution velocity
+	"portamento_control":               PORTAMENTO_CONTROL,
+	"high_resolution_velocity_prefix":  HIGH_RESOLUTION_VELOCITY_PREFIX,
+
 	# Effects send levels
-	"portamento_control":   PORTAMENTO_CONTROL,
 	"reverb_depth":         REVERB_DEPTH,
 	"tremolo_depth":        TREMOLO_DEPTH,
 	"chorus_depth":         CHORUS_DEPTH,

@@ -18,9 +18,18 @@ class TestMetaEvents:
 	def test_sequence_number (self) -> None:
 		assert pymididefs.meta.SEQUENCE_NUMBER == 0x00
 
+	def test_rp019_text_events (self) -> None:
+		"""Program Name and Device Name sit in SMF's reserved text range."""
+		assert pymididefs.meta.PROGRAM_NAME == 0x08
+		assert pymididefs.meta.DEVICE_NAME == 0x09
+
 	def test_control_events (self) -> None:
 		assert pymididefs.meta.CHANNEL_PREFIX == 0x20
 		assert pymididefs.meta.END_OF_TRACK == 0x2F
+
+	def test_midi_port (self) -> None:
+		"""MIDI Port is obsolete and undocumented, and real files still carry it."""
+		assert pymididefs.meta.MIDI_PORT == 0x21
 
 	def test_timing_events (self) -> None:
 		assert pymididefs.meta.TEMPO == 0x51
@@ -32,24 +41,28 @@ class TestMetaEvents:
 		assert pymididefs.meta.SEQUENCER_SPECIFIC == 0x7F
 
 	def test_all_values_are_single_byte (self) -> None:
-		"""Meta-event type bytes fit in a single byte (0x00–0x7F)."""
-		events = [
-			pymididefs.meta.SEQUENCE_NUMBER,
-			pymididefs.meta.TEXT,
-			pymididefs.meta.COPYRIGHT,
-			pymididefs.meta.TRACK_NAME,
-			pymididefs.meta.INSTRUMENT_NAME,
-			pymididefs.meta.LYRIC,
-			pymididefs.meta.MARKER,
-			pymididefs.meta.CUE_POINT,
-			pymididefs.meta.CHANNEL_PREFIX,
-			pymididefs.meta.END_OF_TRACK,
-			pymididefs.meta.TEMPO,
-			pymididefs.meta.SMPTE_OFFSET,
-			pymididefs.meta.TIME_SIGNATURE,
-			pymididefs.meta.KEY_SIGNATURE,
-			pymididefs.meta.SEQUENCER_SPECIFIC,
+		"""Meta-event type bytes fit in a single byte (0x00–0x7F).
+
+		Swept from the module rather than listed by hand, so a constant added
+		later is covered without anyone remembering to add it here.
+		"""
+		events = {
+			name: value
+			for name, value in vars(pymididefs.meta).items()
+			if name.isupper() and isinstance(value, int)
+		}
+
+		assert events, "no meta-event constants found"
+
+		for name, value in events.items():
+			assert 0x00 <= value <= 0x7F, f"{name} = {value:#x} is not a single byte"
+
+	def test_no_duplicate_type_bytes (self) -> None:
+		"""Each meta-event constant names a distinct type byte."""
+		values = [
+			value
+			for name, value in vars(pymididefs.meta).items()
+			if name.isupper() and isinstance(value, int)
 		]
 
-		for event in events:
-			assert 0x00 <= event <= 0x7F
+		assert len(values) == len(set(values))
