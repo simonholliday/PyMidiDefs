@@ -63,3 +63,7 @@ testpaths = ["tests"]
 
 [tool.mypy]
 strict = true
+# The working tree lives on CIFS, where mypy's incremental cache goes stale in
+# ways that abort the run with an INTERNAL ERROR rather than a type error.
+# Keep the cache on local disk; it is disposable and never committed.
+cache_dir = "/tmp/mypy-cache-pymididefs"
