@@ -12,7 +12,7 @@ MIDI 2.0 Channel Voice Messages (with higher resolution) use Message Type 4.
 
 	import pymididefs.ump
 	pymididefs.ump.MIDI2_CHANNEL_VOICE  # 0x4
-	pymididefs.ump.NOTE_ON              # 0x9
+	pymididefs.ump.MIDI2_NOTE_ON        # 0x9  (an opcode, not the 0x90 status byte)
 
 Source: M2-104-UM v1.1 — Universal MIDI Packet (UMP) Format and
 MIDI 2.0 Protocol Specification.
@@ -52,6 +52,11 @@ UTIL_JR_TIMESTAMP   = 0x20  # Jitter Reduction Timestamp  (16-bit delta time)
 # 4-bit opcode field in bits 23–20 of the first word.
 # These extend the MIDI 1.0 opcodes with new per-note and registered
 # controller messages.  MIDI 2.0 Channel Voice Messages are 64-bit (2 words).
+#
+# The five opcodes that share a name with a MIDI 1.0 status byte carry a
+# MIDI2_ prefix.  A UMP opcode is a nibble (0x9) and a status byte is a whole
+# byte (0x90), so a caller who ends up with the wrong one has a number that
+# looks plausible and is not a status byte at all.
 
 REGISTERED_PER_NOTE_CC  = 0x0  # Registered Per-Note Controller
 ASSIGNABLE_PER_NOTE_CC  = 0x1  # Assignable Per-Note Controller
@@ -61,13 +66,13 @@ RELATIVE_REGISTERED_CC  = 0x4  # Relative Registered Controller
 RELATIVE_ASSIGNABLE_CC  = 0x5  # Relative Assignable Controller
 PER_NOTE_PITCH_BEND     = 0x6  # Per-Note Pitch Bend
 # 0x7: Reserved
-NOTE_OFF                = 0x8  # Note Off            (+ 16-bit velocity)
-NOTE_ON                 = 0x9  # Note On             (+ 16-bit velocity, attribute)
+MIDI2_NOTE_OFF          = 0x8  # Note Off            (+ 16-bit velocity)
+MIDI2_NOTE_ON           = 0x9  # Note On             (+ 16-bit velocity, attribute)
 POLY_PRESSURE           = 0xA  # Poly Pressure       (32-bit pressure)
-CONTROL_CHANGE          = 0xB  # Control Change      (32-bit value)
-PROGRAM_CHANGE          = 0xC  # Program Change      (+ optional bank select)
+MIDI2_CONTROL_CHANGE    = 0xB  # Control Change      (32-bit value)
+MIDI2_PROGRAM_CHANGE    = 0xC  # Program Change      (+ optional bank select)
 CHANNEL_PRESSURE        = 0xD  # Channel Pressure    (32-bit pressure)
-PITCH_BEND              = 0xE  # Pitch Bend          (32-bit value)
+MIDI2_PITCH_BEND        = 0xE  # Pitch Bend          (32-bit value)
 PER_NOTE_MANAGEMENT     = 0xF  # Per-Note Management (detach / reset flags)
 
 

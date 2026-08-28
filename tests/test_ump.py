@@ -45,8 +45,8 @@ class TestMIDI2ChannelVoiceOpcodes:
 
 	def test_note_messages (self) -> None:
 		"""MIDI 2.0 Note On/Off opcodes match MIDI 1.0 upper nibble convention."""
-		assert pymididefs.ump.NOTE_OFF == 0x8
-		assert pymididefs.ump.NOTE_ON == 0x9
+		assert pymididefs.ump.MIDI2_NOTE_OFF == 0x8
+		assert pymididefs.ump.MIDI2_NOTE_ON == 0x9
 
 	def test_controller_opcodes (self) -> None:
 		assert pymididefs.ump.REGISTERED_PER_NOTE_CC == 0x0
@@ -70,13 +70,13 @@ class TestMIDI2ChannelVoiceOpcodes:
 			pymididefs.ump.RELATIVE_REGISTERED_CC,
 			pymididefs.ump.RELATIVE_ASSIGNABLE_CC,
 			pymididefs.ump.PER_NOTE_PITCH_BEND,
-			pymididefs.ump.NOTE_OFF,
-			pymididefs.ump.NOTE_ON,
+			pymididefs.ump.MIDI2_NOTE_OFF,
+			pymididefs.ump.MIDI2_NOTE_ON,
 			pymididefs.ump.POLY_PRESSURE,
-			pymididefs.ump.CONTROL_CHANGE,
-			pymididefs.ump.PROGRAM_CHANGE,
+			pymididefs.ump.MIDI2_CONTROL_CHANGE,
+			pymididefs.ump.MIDI2_PROGRAM_CHANGE,
 			pymididefs.ump.CHANNEL_PRESSURE,
-			pymididefs.ump.PITCH_BEND,
+			pymididefs.ump.MIDI2_PITCH_BEND,
 			pymididefs.ump.PER_NOTE_MANAGEMENT,
 		]
 

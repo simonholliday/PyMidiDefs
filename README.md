@@ -70,10 +70,10 @@ pip install git+https://github.com/simonholliday/PyMidiDefs.git
 | `pymididefs.notes` | MIDI note numbers (C-1 to G9) and name/number conversion |
 | `pymididefs.cc` | Control Change number assignments (0-127), plus 14-bit pack/unpack helpers |
 | `pymididefs.rpn` | Standard Registered Parameter Numbers (RPN) and the 14-bit parameter conventions shared with NRPN |
-| `pymididefs.drums` | General MIDI Level 1 percussion key map |
+| `pymididefs.drums` | General MIDI percussion key map — GM Level 1 (notes 35-81) plus the extended GS/GM2 sounds |
 | `pymididefs.gm` | General MIDI Level 1 instrument program numbers and families |
 | `pymididefs.status` | MIDI 1.0 status bytes (channel voice, system common, system real-time) |
-| `pymididefs.meta` | Standard MIDI File meta-event type bytes |
+| `pymididefs.meta` | Standard MIDI File meta-event type bytes, including RP-019 and the obsolete MIDI Port event |
 | `pymididefs.ump` | MIDI 2.0 Universal MIDI Packet message types and constants |
 | `pymididefs.ci` | MIDI 2.0 Capability Inquiry (MIDI-CI) constants |
 
@@ -137,7 +137,7 @@ import pymididefs.ci
 
 # Universal MIDI Packet message types
 pymididefs.ump.MIDI2_CHANNEL_VOICE  # 0x4
-pymididefs.ump.NOTE_ON              # 0x9
+pymididefs.ump.MIDI2_NOTE_ON        # 0x9   (a UMP opcode, not the 0x90 status byte)
 pymididefs.ump.PROTOCOL_MIDI2       # 0x02
 
 # MIDI-CI
