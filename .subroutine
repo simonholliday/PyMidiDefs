@@ -1,0 +1,8 @@
+# Which Subroutine project the work in this directory belongs to.
+# Written by 'subroutine use --here'. Safe to delete: without it, new items go
+# wherever they went before, and nothing already recorded changes.
+connection = "hpz2g4"
+workspace_id = "019fad98-4313-7e36-b972-f7decf66f8ae"  # projects
+workspace = "projects"
+project_id = "01a047e3-46f0-7d71-a9fb-e2ec50b293e6"  # py-midi-defs
+project = "py-midi-defs"
