@@ -10,28 +10,30 @@ defined here, then a variable-length quantity indicating the data length.
 	pymididefs.meta.TEMPO           # 0x51
 	pymididefs.meta.TIME_SIGNATURE  # 0x58
 
-Most of these come from the SMF 1.0 specification.  Three do not, and are here
+Most of these come from the SMF 1.0 specification.  Two do not, and are here
 because files in the wild contain them — a reader that does not know them meets
 an unrecognised type byte on ordinary input:
 
-* ``PROGRAM_NAME`` (0x08) and ``DEVICE_NAME`` (0x09) are text events assigned by
-  MMA Recommended Practice RP-019.  SMF 1.0 reserves 0x01–0x0F for text and
-  leaves these two unassigned; RP-019 names them.
+* ``DEVICE_NAME`` (0x09) is a text event assigned by MMA Recommended Practice
+  RP-019.  SMF 1.0 reserves 0x01–0x0F for text and leaves it unassigned; RP-019
+  names it.
 * ``MIDI_PORT`` (0x21) is not defined by any specification.  It is an obsolete
   convention that many sequencers wrote and some still do, and it is the one an
   SMF reader is most likely to actually encounter.
 
-How far each of the three has actually been checked, since this package is only
-worth using if its numbers are right:
+Both are corroborated by ``mido``'s Standard MIDI File parser, which reads them
+from real files.  This package is only worth using if its numbers are right, so
+nothing goes in that cannot be checked against either a specification or a
+working implementation.
 
-* 0x09 and 0x21 are corroborated by ``mido``'s Standard MIDI File parser, which
-  reads both from real files.
-* **0x08 is not corroborated by anything to hand.**  ``mido`` does not implement
-  it at all.  It is recorded here from secondary sources and should be confirmed
-  against RP-019 itself before anybody relies on it.
+**0x08 is deliberately absent.**  RP-019 is understood to name it Program Name,
+but no specification or implementation to hand confirms the value — ``mido``
+does not implement it at all — so it is left out rather than shipped on a
+recollection.  Adding a constant breaks nobody, so it can arrive in a later
+release once RP-019 has been read.
 
 Sources: Standard MIDI File (SMF) 1.0 Specification — Meta-Event Definitions;
-MMA RP-019 (0x08, 0x09); de facto practice (0x21).
+MMA RP-019 (0x09); de facto practice (0x21).
 """
 
 
@@ -52,12 +54,11 @@ MARKER              = 0x06  # Marker                 (rehearsal letter, section 
 CUE_POINT           = 0x07  # Cue Point              (description of an event in a film/video)
 
 
-# ── Text events assigned by RP-019 (0x08–0x09) ───────────────────────────────
+# ── Text event assigned by RP-019 (0x09) ─────────────────────────────────────
 # Inside SMF 1.0's reserved text range, named by a later MMA recommendation.
+# 0x08 (Program Name) is deliberately absent — see the module docstring.
 
-PROGRAM_NAME        = 0x08  # Program Name    (the patch this track calls for)
-                            # UNCONFIRMED — see the module docstring before relying on this
-DEVICE_NAME         = 0x09  # Device Name     (the port or instrument it plays on)
+DEVICE_NAME         = 0x09  # Device Name            (the port or instrument it plays on)
 
 
 # ── Control events ───────────────────────────────────────────────────────────
