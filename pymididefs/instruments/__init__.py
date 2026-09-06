@@ -34,6 +34,10 @@ error says what to install.
 Definitions are looked for beside your composition first, then in your own
 library, then in the set bundled here — so a file you drop always beats one we
 shipped.  That is the whole answer to adding your own synth.
+
+To start one from a MIDNAM file — Ardour bundles several hundred — see
+``pymididefs.instruments.midnam``.  What it lands is a draft: MIDNAM carries a
+control map and nothing else, and the numbers in it are worth checking.
 """
 
 # This file is a re-export shim, and it is the one place in the package that

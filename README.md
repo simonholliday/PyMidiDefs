@@ -210,6 +210,22 @@ The bundled set is deliberately small and is a starting point rather than a
 catalogue. `moog_dfam.yaml` is five lines, because the DFAM has no MIDI at all
 and saying so is worth more than saying nothing.
 
+If your instrument has a `.midnam` file -- Ardour bundles several hundred --
+`pymididefs.instruments.midnam` will start a definition from it:
+
+```python
+import pymididefs.instruments.midnam
+
+draft = pymididefs.instruments.midnam.read_file("Moog_Minitaur.midnam")
+print(pymididefs.instruments.midnam.to_yaml(draft))
+```
+
+What that lands is a **draft**, and it says so in its own first line. MIDNAM
+carries a control map and nothing else -- no polyphony, no note range, no
+velocity response -- and the numbers it does carry are worth checking against
+the manual. It stays marked `unverified` until you replace the `source` line
+with what you checked it against.
+
 ## Sources
 
 All definitions are sourced from the official MIDI specifications published by
