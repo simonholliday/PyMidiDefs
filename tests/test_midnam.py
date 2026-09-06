@@ -12,6 +12,12 @@ import pymididefs.instruments.midnam
 import pymididefs.instruments.validation
 
 
+# Shaped after the real Moog_Minitaur.midnam rather than after the format's prose
+# description: a value list written inline inside a control, a shared one referred
+# to by name, 14-bit controls split into "(Coarse)" and "(Fine)" halves, notes
+# nested inside a NoteGroup, and more than one note map. An earlier version of
+# this fixture used a `Values ValueNameList="..."` attribute, which reads well and
+# appears in no real file, so the tests passed against a shape that does not exist.
 MINITAUR = """<?xml version="1.0" encoding="UTF-8"?>
 <MIDINameDocument>
   <MasterDeviceNames>
@@ -25,31 +31,41 @@ MINITAUR = """<?xml version="1.0" encoding="UTF-8"?>
         </PatchNameList>
       </PatchBank>
     </ChannelNameSet>
-    <ValueNameList Name="Glide Type">
-      <Value Number="0" Name="LCR"/>
-      <Value Number="43" Name="LCT"/>
-      <Value Number="85" Name="Exponential"/>
-    </ValueNameList>
-    <ValueNameList Name="Switch">
+    <ValueNameList Name="Toggle">
       <Value Number="0" Name="Off"/>
       <Value Number="64" Name="On"/>
     </ValueNameList>
     <ControlNameList Name="Controls">
-      <Control Type="7bit" Number="5" Name="Glide Rate"/>
-      <Control Type="7bit" Number="92" Name="Glide Type">
-        <Values Min="0" Max="127" ValueNameList="Glide Type"/>
+      <Control Type="7bit" Number="3" Name="LFO Rate (Coarse)"/>
+      <Control Type="7bit" Number="35" Name="LFO Rate (Fine)"/>
+      <Control Type="7bit" Number="20" Name="KB Track (Coarse)"/>
+      <Control Type="7bit" Number="54" Name="KB Track (Fine)"/>
+      <Control Type="7bit" Number="91" Name="Key Priority">
+        <Values Min="0" Max="127">
+          <ValueNameList>
+            <Value Number="0" Name="Low"/>
+            <Value Number="43" Name="High"/>
+            <Value Number="85" Name="Last"/>
+          </ValueNameList>
+        </Values>
       </Control>
-      <Control Type="7bit" Number="65" Name="Glide Switch">
-        <Values Min="0" Max="127" ValueNameList="Switch"/>
+      <Control Type="7bit" Number="82" Name="LFO Key Trigger">
+        <Values Min="0" Max="127">
+          <UsesValueNameList Name="Toggle"/>
+        </Values>
       </Control>
       <Control Type="14bit" Number="19" Name="Cutoff"/>
-      <Control Type="7bit" Number="3" Name="Glide Rate"/>
       <Control Type="7bit" Number="900" Name="Nonsense"/>
       <Control Type="7bit" Number="70" Name="16' Octave"/>
     </ControlNameList>
-    <NoteNameList Name="Voices">
-      <Note Number="36" Name="Kick"/>
+    <NoteNameList Name="Kit 00">
+      <NoteGroup Name="Drums">
+        <Note Number="36" Name="Kick"/>
+      </NoteGroup>
       <Note Number="38" Name="Snare"/>
+    </NoteNameList>
+    <NoteNameList Name="Kit 01">
+      <Note Number="60" Name="Something Else"/>
     </NoteNameList>
   </MasterDeviceNames>
 </MIDINameDocument>
@@ -72,17 +88,68 @@ class TestReading:
 		assert definition.source == "imported from Moog_Minitaur.midnam, unverified"
 		assert definition.is_unverified
 
-	def test_bands_arrive_verbatim (self) -> None:
-		"""A MIDNAM Value Number is the low end of its band, as a definition wants."""
+	def test_a_value_list_written_inline_is_read (self) -> None:
+		"""A MIDNAM Value Number is the low end of its band, as a definition wants.
+
+		Note the 85: that is what the shared Minitaur file really says, and the
+		manufacturer's own firmware addendum says 86. An import is an on-ramp.
+		"""
 		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
-		glide = definition.controls["glide_type"]
+		priority = definition.controls["key_priority"]
 
-		assert glide.cc == 92
-		assert glide.values == {"lcr": 0, "lct": 43, "exponential": 85}
-		assert glide.band("lct") == (43, 84)
+		assert priority.cc == 91
+		assert priority.values == {"low": 0, "high": 43, "last": 85}
+		assert priority.band("high") == (43, 84)
 
-	def test_a_14_bit_control_says_its_pair_is_missing (self) -> None:
-		"""MIDNAM never pairs the coarse number with the fine one."""
+	def test_bands_listed_downwards_are_sorted (self) -> None:
+		"""A real file counts a clock divider downwards, and a definition may not.
+
+		A band is defined by its number, not by where it sits in the file, so
+		sorting loses nothing -- and without it the import produces a definition
+		this package would refuse to load.
+		"""
+		document = (
+			"<MIDINameDocument><MasterDeviceNames><Model>X</Model>"
+			'<Control Number="9" Name="Divider"><Values Min="0" Max="127"><ValueNameList>'
+			'<Value Number="107" Name="Fast"/><Value Number="102" Name="Slow"/>'
+			"</ValueNameList></Values></Control>"
+			"</MasterDeviceNames></MIDINameDocument>"
+		)
+		definition = pymididefs.instruments.midnam.read(document, source = "x.midnam")
+
+		assert list(definition.controls["divider"].values.items()) == [("slow", 102), ("fast", 107)]
+
+	def test_a_shared_value_list_is_resolved_by_name (self) -> None:
+		"""Controls refer to a named list with UsesValueNameList, not an attribute."""
+		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
+
+		assert definition.controls["lfo_key_trigger"].values == {"off": 0, "on": 64}
+
+	def test_a_coarse_and_fine_pair_becomes_one_control (self) -> None:
+		"""MIDNAM splits a 14-bit control in two and says so only in the names."""
+		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
+		rate = definition.controls["lfo_rate"]
+
+		assert rate.cc == 3
+		assert rate.lsb == 35
+		assert rate.is_14_bit
+		assert "lfo_rate_fine" not in definition.controls
+
+	def test_a_pair_whose_numbers_disagree_is_left_apart (self) -> None:
+		"""Names pairing is not enough: the fine number must be the coarse one plus 32.
+
+		This is a real disagreement in the real file -- KB Track is printed as
+		20 and 54 -- and one of the two numbers is wrong. Guessing which would be
+		inventing a number, so both halves stay and the conflict is reported.
+		"""
+		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
+
+		assert definition.controls["kb_track_coarse"].lsb is None
+		assert definition.controls["kb_track_fine"].cc == 54
+		assert any("not 20 + 32" in warning for warning in definition.warnings)
+
+	def test_a_14_bit_control_with_no_partner_says_so (self) -> None:
+		"""Marked 14bit with no fine half beside it: `lsb` has to be added by hand."""
 		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
 
 		assert definition.controls["cutoff"].lsb is None
@@ -98,10 +165,15 @@ class TestReading:
 
 	def test_repeated_control_names_do_not_collapse (self) -> None:
 		"""Two controls quietly becoming one is a loss nobody would notice."""
-		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
+		document = (
+			"<MIDINameDocument><MasterDeviceNames><Model>X</Model>"
+			'<Control Number="5" Name="Rate"/><Control Number="3" Name="Rate"/>'
+			"</MasterDeviceNames></MIDINameDocument>"
+		)
+		definition = pymididefs.instruments.midnam.read(document, source = "x.midnam")
 
-		assert definition.controls["glide_rate"].cc == 5
-		assert definition.controls["glide_rate_2"].cc == 3
+		assert definition.controls["rate"].cc == 5
+		assert definition.controls["rate_2"].cc == 3
 
 	def test_a_name_starting_with_a_digit_is_kept_not_dropped (self) -> None:
 		"""16' Octave is a real control, and renaming beats losing it."""
@@ -117,11 +189,22 @@ class TestReading:
 			for control in definition.controls.values())
 		assert any("not 0-127" in warning for warning in definition.warnings)
 
-	def test_notes_become_voices (self) -> None:
+	def test_notes_become_voices_including_grouped_ones (self) -> None:
+		"""A NoteGroup organises notes inside a map; they still belong to it."""
 		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
 
 		assert definition.voice.addressing == "voices"
 		assert definition.voice.voices == {"kick": 36, "snare": 38}
+
+	def test_only_the_first_note_map_is_taken_and_the_rest_are_named (self) -> None:
+		"""One measured file carries fifty kits; a definition describes one map.
+
+		Flattening them together would invent an instrument that does not exist.
+		"""
+		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
+
+		assert 60 not in definition.voice.voices.values()
+		assert any("note maps in this file" in warning for warning in definition.warnings)
 
 	def test_patches_are_counted_as_presets (self) -> None:
 		definition = pymididefs.instruments.midnam.read(MINITAUR, source = "x.midnam")
@@ -171,7 +254,8 @@ class TestDraftFile:
 		reloaded = pymididefs.instruments.load_file(path)
 
 		assert reloaded.model.name == "Minitaur"
-		assert reloaded.controls["glide_type"].values == {"lcr": 0, "lct": 43, "exponential": 85}
+		assert reloaded.controls["key_priority"].values == {"low": 0, "high": 43, "last": 85}
+		assert reloaded.controls["lfo_rate"].lsb == 35
 		assert reloaded.is_unverified
 
 	def test_off_and_on_are_quoted_on_the_way_out (self) -> None:

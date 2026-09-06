@@ -101,16 +101,48 @@ def _unique (name: str, taken: typing.Container[str]) -> str:
 	return name
 
 
-def _value_lists (root: xml.etree.ElementTree.Element) -> dict[str, dict[str, int]]:
+def _values_of (element: xml.etree.ElementTree.Element) -> dict[str, int]:
 
-	"""Every named list of values in the document, keyed by its MIDNAM name.
+	"""The named bands a ``ValueNameList`` element holds.
 
 	A ``Value``'s ``Number`` is the lowest of its band, running to the next entry
 	minus one -- the same convention a definition file uses, so nothing has to be
 	converted here.
 	"""
 
-	lists: dict[str, dict[str, int]] = {}
+	values: dict[str, int] = {}
+
+	for value in _find_all(element, "Value"):
+		number = value.get("Number")
+
+		if number is None:
+			continue
+
+		try:
+			low = int(number)
+		except ValueError:
+			continue
+
+		key = _unique(_slug(value.get("Name") or "", "value") or f"value_{low}", values)
+		values[key] = low
+
+	# Real files do not always list bands low to high -- one measured MIDNAM
+	# counts a clock divider downwards. A band is defined by its number and not
+	# by its position in the file, so sorting loses nothing and is what makes the
+	# result a definition this package will actually load.
+	return dict(sorted(values.items(), key = lambda pair: pair[1]))
+
+
+def _shared_value_lists (root: xml.etree.ElementTree.Element) -> dict[str, dict[str, int]]:
+
+	"""The document's named value lists, which controls refer to by name.
+
+	Only lists carrying a ``Name`` are shared. A ``ValueNameList`` written inline
+	inside a control's ``Values`` has no name and belongs to that control alone;
+	real files use both forms, often in the same document.
+	"""
+
+	shared: dict[str, dict[str, int]] = {}
 
 	for element in _find_all(root, "ValueNameList"):
 		name = element.get("Name")
@@ -118,27 +150,168 @@ def _value_lists (root: xml.etree.ElementTree.Element) -> dict[str, dict[str, in
 		if not name:
 			continue
 
-		values: dict[str, int] = {}
-
-		for value in _find_all(element, "Value"):
-			label = value.get("Name") or ""
-			number = value.get("Number")
-
-			if number is None:
-				continue
-
-			try:
-				low = int(number)
-			except ValueError:
-				continue
-
-			key = _unique(_slug(label, "value") or f"value_{low}", values)
-			values[key] = low
+		values = _values_of(element)
 
 		if values:
-			lists[name] = values
+			shared[name] = values
 
-	return lists
+	return shared
+
+
+# Moog's files split a 14-bit control into two, named "(Coarse)" and "(Fine)";
+# Waldorf's use an "MSB"/"LSB" suffix. Neither is required by MIDNAM, so a pair
+# is only joined when the arithmetic agrees as well as the name.
+_COARSE: typing.Final[re.Pattern[str]] = re.compile(r"\s*(?:\((?:coarse|msb)\)|\bmsb)\s*$", re.I)
+_FINE: typing.Final[re.Pattern[str]] = re.compile(r"\s*(?:\((?:fine|lsb)\)|\blsb)\s*$", re.I)
+
+
+class _Raw(typing.NamedTuple):
+
+	"""One ``Control`` element, before coarse and fine halves are joined."""
+
+	label: str
+	cc: int
+	values: dict[str, int]
+	extent: tuple[int, int]
+	wide: bool
+
+
+def _raw_controls (
+	root: xml.etree.ElementTree.Element,
+	shared: dict[str, dict[str, int]],
+	warnings: list[str],
+	source: str,
+) -> list[_Raw]:
+
+	"""Every usable ``Control`` in the document, in the order it appears."""
+
+	found: list[_Raw] = []
+
+	for element in _find_all(root, "Control"):
+		number = element.get("Number")
+		label = element.get("Name") or ""
+
+		if number is None:
+			continue
+
+		try:
+			cc = int(number)
+		except ValueError:
+			continue
+
+		if not 0 <= cc <= 127:
+			warnings.append(f"{source}: control {label!r} has number {cc}, which is not 0-127 — skipped")
+			continue
+
+		extent = (0, 127)
+		values: dict[str, int] = {}
+
+		for holder in _find_all(element, "Values"):
+			low, high = holder.get("Min"), holder.get("Max")
+
+			if low is not None and high is not None:
+				try:
+					extent = (int(low), int(high))
+				except ValueError:
+					pass
+
+			# A list written inline belongs to this control; one referred to by
+			# name is shared with others. Real files use both, often at once.
+			for inline in _find_all(holder, "ValueNameList"):
+				values = _values_of(inline) or values
+
+			for reference in _find_all(holder, "UsesValueNameList"):
+				named = reference.get("Name")
+
+				if named and named in shared:
+					values = shared[named]
+
+		found.append(_Raw(
+			label  = label,
+			cc     = cc,
+			values = {name: low for name, low in values.items() if extent[0] <= low <= extent[1]},
+			extent = extent,
+			wide   = element.get("Type") == "14bit",
+		))
+
+	return found
+
+
+def _join_wide_pairs (
+	raw: list[_Raw],
+	warnings: list[str],
+	source: str,
+) -> dict[str, pymididefs.instruments.definition.Control]:
+
+	"""Join controls split into a coarse and a fine half into one 14-bit control.
+
+	MIDNAM has no structural way to say that two control numbers are the two
+	halves of one parameter, so files that carry 14-bit controls at all say it in
+	the names: Moog writes "(Coarse)" and "(Fine)", Waldorf an "MSB"/"LSB"
+	suffix. **A pair is joined only when the arithmetic agrees as well as the
+	name** -- the fine number must be the coarse one plus 32, which is the rule
+	MIDI itself sets. Where the names pair and the numbers do not, both halves
+	are kept apart and the disagreement is reported, because guessing which of
+	the two is the typo would be inventing a number.
+	"""
+
+	coarse: dict[str, _Raw] = {}
+	fine: dict[str, _Raw] = {}
+
+	for entry in raw:
+		if _COARSE.search(entry.label):
+			coarse[_COARSE.sub("", entry.label).strip().lower()] = entry
+		elif _FINE.search(entry.label):
+			fine[_FINE.sub("", entry.label).strip().lower()] = entry
+
+	joined: dict[str, _Raw] = {}
+	absorbed: set[int] = set()
+
+	for base, low_half in coarse.items():
+		high_half = fine.get(base)
+
+		if high_half is None:
+			continue
+
+		if high_half.cc != low_half.cc + 32:
+			warnings.append(
+				f"{source}: {low_half.label!r} and {high_half.label!r} look like a pair, but "
+				f"{high_half.cc} is not {low_half.cc} + 32 — left as two controls, and one of "
+				f"the two numbers is wrong"
+			)
+			continue
+
+		joined[base] = high_half
+		absorbed.add(id(high_half))
+
+	controls: dict[str, pymididefs.instruments.definition.Control] = {}
+
+	for entry in raw:
+		if id(entry) in absorbed:
+			continue
+
+		base = _COARSE.sub("", entry.label).strip().lower()
+		partner = joined.get(base) if _COARSE.search(entry.label) else None
+		label = _COARSE.sub("", entry.label).strip() if partner else entry.label
+
+		key = _unique(_slug(label, "control") or f"control_{entry.cc}", controls)
+
+		controls[key] = pymididefs.instruments.definition.Control(
+			name   = key,
+			label  = label or key.replace("_", " "),
+			cc     = entry.cc,
+			lsb    = partner.cc if partner else None,
+			values = entry.values,
+			range  = entry.extent,
+		)
+
+		if entry.wide and partner is None:
+			warnings.append(
+				f"{source}: {key} is marked 14bit and has no fine half named beside it, "
+				f"so `lsb` has to be added by hand"
+			)
+
+	return controls
 
 
 def read (
@@ -167,75 +340,37 @@ def read (
 			f"{source}: no <Model> element, so there is no instrument to name")
 
 	warnings: list[str] = []
-	named_values = _value_lists(root)
-	controls: dict[str, pymididefs.instruments.definition.Control] = {}
+	shared = _shared_value_lists(root)
+	controls = _join_wide_pairs(_raw_controls(root, shared, warnings, source), warnings, source)
 
-	for element in _find_all(root, "Control"):
-		number = element.get("Number")
-		label = element.get("Name") or ""
-
-		if number is None:
-			continue
-
-		try:
-			cc = int(number)
-		except ValueError:
-			continue
-
-		if not 0 <= cc <= 127:
-			warnings.append(f"{source}: control {label!r} has number {cc}, which is not 0-127 — skipped")
-			continue
-
-		key = _unique(_slug(label, "control") or f"control_{cc}", controls)
-		extent = (0, 127)
-		values: dict[str, int] = {}
-
-		for holder in _find_all(element, "Values"):
-			low, high = holder.get("Min"), holder.get("Max")
-
-			if low is not None and high is not None:
-				try:
-					extent = (int(low), int(high))
-				except ValueError:
-					pass
-
-			listed = holder.get("ValueNameList")
-
-			if listed and listed in named_values:
-				values = named_values[listed]
-
-		if element.get("Type") == "14bit":
-			warnings.append(
-				f"{source}: {key} is marked 14bit — MIDNAM does not pair the coarse "
-				f"number with its fine one, so `lsb` has to be added by hand"
-			)
-
-		controls[key] = pymididefs.instruments.definition.Control(
-			name   = key,
-			label  = label or key.replace("_", " "),
-			cc     = cc,
-			values = {inner: low for inner, low in values.items() if extent[0] <= low <= extent[1]},
-			range  = extent,
-		)
-
+	# A drum machine carries one note list per kit -- fifty of them, in one file
+	# measured. A definition has room for one voice map, so the first is taken
+	# and the rest are named rather than silently flattened together.
+	note_lists = _find_all(root, "NoteNameList")
 	voices: dict[str, int] = {}
 
-	for element in _find_all(root, "Note"):
-		number = element.get("Number")
-		label = element.get("Name") or ""
+	if note_lists:
+		for element in _find_all(note_lists[0], "Note"):
+			number = element.get("Number")
 
-		if number is None:
-			continue
+			if number is None:
+				continue
 
-		try:
-			note = int(number)
-		except ValueError:
-			continue
+			try:
+				note = int(number)
+			except ValueError:
+				continue
 
-		if not 0 <= note <= 127:
-			continue
+			if 0 <= note <= 127:
+				key = _unique(_slug(element.get("Name") or "", "voice") or f"voice_{note}", voices)
+				voices[key] = note
 
-		voices[_unique(_slug(label, "voice") or f"voice_{note}", voices)] = note
+	if len(note_lists) > 1:
+		warnings.append(
+			f"{source}: {len(note_lists)} note maps in this file — took "
+			f"{note_lists[0].get('Name') or 'the first'} and left the rest; "
+			f"a definition describes one map, so pick the one you use"
+		)
 
 	presets = len(_find_all(root, "Patch")) or None
 
@@ -370,13 +505,36 @@ def to_yaml (definition: pymididefs.instruments.definition.Definition) -> str:
 			lines.append("")
 			lines.append(f"  {_key(control.name)}:")
 			lines.append(f"    label: {_scalar(control.label)}")
-			lines.append(f"    cc: {control.cc}")
+
+			if control.cc is not None:
+				lines.append(f"    cc: {control.cc}")
+
+			if control.lsb is not None:
+				lines.append(f"    lsb: {control.lsb}")
+
+			if control.nrpn is not None:
+				lines.append(f"    nrpn: {control.nrpn}")
 
 			if control.range != (0, 127):
 				lines.append(f"    range: [{control.range[0]}, {control.range[1]}]")
 
+			if control.default is not None:
+				lines.append(f"    default: {control.default}")
+
 			if control.values:
 				pairs = ", ".join(f"{_key(name)}: {low}" for name, low in control.values.items())
 				lines.append(f"    values: {{{pairs}}}")
+
+			if control.kind_override is not None:
+				lines.append(f"    kind: {control.kind_override}")
+
+			if control.unit is not None:
+				lines.append(f"    unit: {_scalar(control.unit)}")
+
+			if control.group is not None:
+				lines.append(f"    group: {_scalar(control.group)}")
+
+			if control.panel_only:
+				lines.append("    panel_only: true")
 
 	return "\n".join(lines).rstrip() + "\n"
