@@ -3,6 +3,11 @@
 A zero-dependency reference library covering the MIDI 1.0 Detailed Specification,
 General MIDI Level 1, Universal MIDI Packet (UMP) format, and MIDI-CI.
 
+Those are specification facts: true for everybody, permanently. The library also
+carries instrument definitions -- what a *particular model* of instrument does --
+which are a different kind of claim and are read through an optional extra, so
+that importing this package still pulls in nothing at all.
+
 Modules
 -------
 notes   — MIDI note numbers and name/number conversion.
@@ -14,6 +19,7 @@ status  — MIDI 1.0 status bytes (channel voice, system common, system real-tim
 meta    — Standard MIDI File meta-event type bytes, including the ones only real files carry.
 ump     — MIDI 2.0 Universal MIDI Packet message types and constants.
 ci      — MIDI 2.0 Capability Inquiry (MIDI-CI) constants.
+instruments — what one model of instrument does; needs pymididefs[instruments].
 """
 
 import importlib.metadata

@@ -25,8 +25,36 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install the package and its dev dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev,instruments]"
       - name: Run the tests
         run: python -m pytest
       - name: Type-check
         run: python -m mypy pymididefs tests
+
+  base-install:
+    # Instrument definitions need a YAML parser, which is an optional extra so
+    # that `import pymididefs` keeps pulling in nothing. Nothing in the suite
+    # above can check that, because the suite above has the parser installed.
+    # This job is the whole verification of the property the extra exists for.
+    name: Base install pulls in nothing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install without the instruments extra
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Prove the YAML parser really is absent
+        # Without this the job could pass while proving nothing, if a dev
+        # dependency ever started pulling PyYAML in behind our backs.
+        run: |
+          if python -c "import yaml" 2>/dev/null; then
+            echo "PyYAML is installed, so this job cannot check what it exists to check."
+            exit 1
+          fi
+          echo "PyYAML absent, as intended."
+      - name: The package still imports, and reading says what to install
+        run: python -m pytest tests/test_package.py -v
+      - name: The rest of the suite still passes without it
+        run: python -m pytest

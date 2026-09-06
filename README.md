@@ -18,10 +18,38 @@ assignments, program change values, status bytes. These numbers are defined
 by the MIDI specification and never change, yet most projects end up
 re-defining them from scratch or copying them from unreliable sources.
 
-PyMidiDefs gives you a single, authoritative package with every constant
-sourced directly from the official MIDI specifications. It
-has no runtime dependencies and works with any MIDI library or framework --
-python-rtmidi, mido, pygame.midi, or your own socket-level implementation.
+PyMidiDefs gives you a single package with every constant sourced directly
+from the official MIDI specifications. It has no runtime dependencies and works
+with any MIDI library or framework -- python-rtmidi, mido, pygame.midi, or your
+own socket-level implementation.
+
+It also carries **instrument definitions**: what a *particular model* of synth
+or drum machine answers to. Those are a different kind of claim, and the next
+section says how they differ.
+
+## Two kinds of fact
+
+Most of this package holds **specification** facts. CC 7 is Volume; note 60 is
+C4. They are true for everybody, permanently, they are transcribed from
+published standards, and they cannot be wrong about the world.
+
+`pymididefs.instruments` holds **model** facts. A Minitaur ignores notes above
+72; a Matriarch's CC 94 switches it between one, two and four voices. They are
+true for everybody who owns that model, and they change when the manufacturer
+ships firmware.
+
+The difference matters when you are deciding how much to trust a number. **A
+model fact is a report, and reports are wrong in the wild.** For one parameter
+on one common synth -- the Minitaur's key priority -- the manual, the firmware
+addendum, and the `.midnam` file everybody shares give three different answers.
+So every instrument definition carries a `source` saying which manual and which
+page it came from, and one imported automatically stays marked `unverified`
+until a person has checked it.
+
+**Rig facts are not here and never will be.** Which channel *your* Minitaur is
+on, which port it is plugged into, which notes you have chosen to play -- those
+belong to your own project, not to a definition shared by everyone who owns the
+same box.
 
 ## About MIDI
 
@@ -57,6 +85,13 @@ pip install pymididefs
 
 Requires Python 3.10 or later. There are no runtime dependencies.
 
+Reading instrument definitions needs a YAML parser, which is an optional extra
+so that the base install keeps pulling in nothing:
+
+```bash
+pip install pymididefs[instruments]
+```
+
 To install the latest unreleased code straight from the repository:
 
 ```bash
@@ -76,6 +111,7 @@ pip install git+https://github.com/simonholliday/PyMidiDefs.git
 | `pymididefs.meta` | Standard MIDI File meta-event type bytes, including RP-019 and the obsolete MIDI Port event |
 | `pymididefs.ump` | MIDI 2.0 Universal MIDI Packet message types and constants |
 | `pymididefs.ci` | MIDI 2.0 Capability Inquiry (MIDI-CI) constants |
+| `pymididefs.instruments` | What a particular model of instrument does -- its controls, voicing and note range. Needs the `instruments` extra |
 
 ## Usage
 
@@ -144,6 +180,35 @@ pymididefs.ump.PROTOCOL_MIDI2       # 0x02
 pymididefs.ci.DISCOVERY       # 0x70
 pymididefs.ci.PROFILE_INQUIRY # 0x20
 ```
+
+### Instrument definitions
+
+```python
+import pymididefs.instruments
+
+matriarch = pymididefs.instruments.load("moog_matriarch")
+
+matriarch.voice.voicing_modes            # (1, 2, 4)  switchable voicing
+matriarch.voice.plays_note(60)           # True
+matriarch.controls["glide_type"].kind    # 'choice'
+
+# What to send to put a banded control into a named state. Definitions record
+# the band boundaries as manuals print them; working out the number is this
+# library's job.
+matriarch.controls["glide_type"].value_for("exp")   # 106
+
+pymididefs.instruments.available()       # what is on the search path
+```
+
+Definitions are looked for beside your composition first, then in your own
+library, then in the small set bundled here -- so **a file you drop always beats
+one we shipped**. That is the whole answer to adding your own synth: no index to
+edit, no registration, no pull request. A definition is one self-contained YAML
+file, and you share it by sending it.
+
+The bundled set is deliberately small and is a starting point rather than a
+catalogue. `moog_dfam.yaml` is five lines, because the DFAM has no MIDI at all
+and saying so is worth more than saying nothing.
 
 ## Sources
 
