@@ -18,10 +18,10 @@ assignments, program change values, status bytes. These numbers are defined
 by the MIDI specification and never change, yet most projects end up
 re-defining them from scratch or copying them from unreliable sources.
 
-PyMidiDefs gives you a single package with every constant sourced directly
-from the official MIDI specifications. It has no runtime dependencies and works
-with any MIDI library or framework -- python-rtmidi, mido, pygame.midi, or your
-own socket-level implementation.
+PyMidiDefs gives you a single package with every protocol constant taken
+directly from the official MIDI specifications. It has no runtime dependencies
+and works with any MIDI library or framework -- python-rtmidi, mido, pygame.midi,
+or your own socket-level implementation.
 
 It also carries **instrument definitions**: what a *particular model* of synth
 or drum machine answers to. Those are a different kind of claim, and the next
@@ -44,7 +44,8 @@ on one common synth -- the Minitaur's key priority -- the manual, the firmware
 addendum, and the `.midnam` file everybody shares give three different answers.
 So every instrument definition carries a `source` saying which manual and which
 page it came from, and one imported automatically stays marked `unverified`
-until a person has checked it.
+until a person has checked it. [Sources](#sources), below, says where each of
+the bundled ones came from and gives that Minitaur disagreement in full.
 
 **Rig facts are not here and never will be.** Which channel *your* Minitaur is
 on, which port it is plugged into, which notes you have chosen to play -- those
@@ -228,7 +229,10 @@ with what you checked it against.
 
 ## Sources
 
-All definitions are sourced from the official MIDI specifications published by
+### The protocol constants
+
+Every constant in `notes`, `cc`, `rpn`, `drums`, `gm`, `status`, `meta`, `ump`
+and `ci` is transcribed from the official MIDI specifications published by
 the [MIDI Association](https://midi.org/specs):
 
 - [MIDI 1.0 Detailed Specification](https://midi.org/midi-1-0-detailed-specification) (MMA/AMEI)
@@ -240,6 +244,50 @@ the [MIDI Association](https://midi.org/specs):
 
 Some specifications require a free [MIDI Association membership](https://midi.org/membership)
 to download.
+
+Where a module carries anything from outside those documents it says so in its
+own docstring. `pymididefs.meta` is the one that does: it holds two Standard
+MIDI File meta-events that no specification defines, because real files contain
+them and a reader that does not know them fails on ordinary input.
+
+### The instrument definitions
+
+These come from somewhere else, and it matters which. **A definition is only as
+good as its `source` line, and that line is the authority -- not this README.**
+
+```python
+matriarch = pymididefs.instruments.load("moog_matriarch")
+
+matriarch.source        # the manual and the pages, in the file's own words
+matriarch.is_unverified # True if nobody has checked it yet
+matriarch.warnings      # what the validator thought worth saying
+```
+
+The definitions bundled here were read out of **manufacturers' own user
+manuals**, page by page, and each names the manual and the pages it came from.
+Two of the four were checked against a second source as well: the Minitaur
+against Moog's firmware v2.1 addendum, and the DRM1's note map against a working
+implementation of the same machine.
+
+The Minitaur is the worked example of why that second source matters. Its
+manual prints the key-priority bands as `0-42`, `43-84`, `87-127` -- leaving 85
+and 86 assigned to nothing -- and the firmware addendum corrects the third band
+to **86**. This package carries 86, and the file says why it differs from the
+printed table. That is the level of care every bundled definition is held to,
+and it is why a `source` line records pages rather than saying "the manual".
+
+**Anything imported is not held to it at all.** `pymididefs.instruments.midnam`
+starts a definition from a `.midnam` file, and what it lands says
+`imported from <file>, unverified` in its own source line, keeps saying it, and
+is reported by the validator until a person replaces it. That is not caution for
+its own sake: the widely shared `Moog_Minitaur.midnam` gives that same
+key-priority band as **85**, which is neither what the manual says nor what the
+addendum says. It is the best public machine-readable description of that
+instrument, and it is wrong.
+
+**And a definition you supply yourself is yours.** Files you drop beside your
+composition or into your own library beat the ones bundled here, by design, and
+this package makes no claim about where their numbers came from.
 
 ## License
 

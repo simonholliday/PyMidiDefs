@@ -1,6 +1,7 @@
 """Tests for pymididefs.instruments — reading what a particular model does."""
 
 import pathlib
+import re
 
 import pytest
 
@@ -48,6 +49,22 @@ class TestBundledCorpus:
 
 			assert definition.source, f"{path.name} does not say where its facts came from"
 			assert not definition.is_unverified, f"{path.name} ships unverified"
+
+	def test_every_bundled_definition_cites_pages (self) -> None:
+		"""The README promises each one names its manual and its pages.
+
+		"The manual" cannot be checked by anybody; "p.13" can. This keeps that
+		promise true as the corpus grows, since a source line is the one part of
+		a definition nothing else can verify for you.
+		"""
+		cites = re.compile(r"\bpp?\.\s*\d|\b\d+\s*pages?\b|\bevery page\b", re.I)
+
+		for path in sorted(CORPUS.glob("*.yaml")):
+			definition = pymididefs.instruments.load_file(path)
+			source = definition.source or ""
+
+			assert "manual" in source.lower(), f"{path.name} does not name a document"
+			assert cites.search(source), f"{path.name} names no page: {source[:80]!r}"
 
 	def test_dfam_is_the_minimum_case (self) -> None:
 		"""An instrument with no MIDI at all is a real definition, not an empty one.
