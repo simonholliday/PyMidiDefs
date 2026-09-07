@@ -227,6 +227,10 @@ velocity response -- and the numbers it does carry are worth checking against
 the manual. It stays marked `unverified` until you replace the `source` line
 with what you checked it against.
 
+**This is not how the bundled definitions were made.** Those came from manuals,
+and none of them is an import. [Sources](#sources) measures how far a `.midnam`
+can be trusted, on the one instrument where both can be compared.
+
 ## Sources
 
 ### The protocol constants
@@ -268,6 +272,15 @@ manuals**, page by page, and each names the manual and the pages it came from.
 Two of the four were checked against a second source as well: the Minitaur
 against Moog's firmware v2.1 addendum, and the DRM1's note map against a working
 implementation of the same machine.
+
+**None of them was imported from a `.midnam` file, and none ever will be.** The
+importer described below is a tool for starting a definition of *your*
+instrument; it is not where ours come from.
+
+Three tests hold that line, so it is a property of the package rather than a
+promise in a README: one refuses to ship a definition that does not name a
+document and cite pages, one refuses anything still marked `unverified`, and one
+refuses anything the importer wrote.
 
 The Minitaur is the worked example of why that second source matters. Its
 manual prints the key-priority bands as `0-42`, `43-84`, `87-127` -- leaving 85

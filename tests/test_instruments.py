@@ -50,6 +50,23 @@ class TestBundledCorpus:
 			assert definition.source, f"{path.name} does not say where its facts came from"
 			assert not definition.is_unverified, f"{path.name} ships unverified"
 
+	def test_nothing_bundled_is_an_import (self) -> None:
+		"""The README says none of these came from a .midnam, and it has to stay true.
+
+		An import is a good way to start a definition and a poor place to stop.
+		Shipping one would mean this package vouching for numbers nobody read out
+		of a manual, which is the one thing its whole shape is arranged against.
+		"""
+		for path in sorted(CORPUS.glob("*.yaml")):
+			definition = pymididefs.instruments.load_file(path)
+			source = (definition.source or "").lower()
+
+			# "imported from" is what the importer writes, and is the whole test.
+			# Merely naming a .midnam is not disqualifying and must not be treated
+			# as such: moog_minitaur.yaml names one in order to record that it
+			# disagrees, which is the opposite of having been derived from it.
+			assert "imported from" not in source, f"{path.name} is an import: {source[:60]!r}"
+
 	def test_every_bundled_definition_cites_pages (self) -> None:
 		"""The README promises each one names its manual and its pages.
 
