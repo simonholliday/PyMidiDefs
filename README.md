@@ -276,14 +276,27 @@ to **86**. This package carries 86, and the file says why it differs from the
 printed table. That is the level of care every bundled definition is held to,
 and it is why a `source` line records pages rather than saying "the manual".
 
-**Anything imported is not held to it at all.** `pymididefs.instruments.midnam`
-starts a definition from a `.midnam` file, and what it lands says
-`imported from <file>, unverified` in its own source line, keeps saying it, and
-is reported by the validator until a person replaces it. That is not caution for
-its own sake: the widely shared `Moog_Minitaur.midnam` gives that same
-key-priority band as **85**, which is neither what the manual says nor what the
-addendum says. It is the best public machine-readable description of that
-instrument, and it is wrong.
+**Anything imported is a draft, and is not held to that at all.**
+`pymididefs.instruments.midnam` starts a definition from a `.midnam` file, and
+what it lands says `imported from <file>, unverified` in its own source line,
+keeps saying it, and is reported by the validator until a person replaces it.
+
+That is not a reason to avoid importing -- it is a good way to start and a poor
+place to stop, and it is worth being precise about which. Comparing the widely
+shared `Moog_Minitaur.midnam` against the same instrument's manual and firmware
+addendum, on the one instrument where this package holds both:
+
+- **all 37 control-change numbers agree**, and
+- **all 17 14-bit pairings agree**, which is the tedious half of a definition and
+  the half most easily mistyped by hand;
+- **4 of the 11 comparable band boundaries differ**, including the key-priority
+  band it gives as `85` where the manual says `87` and the addendum says `86`.
+
+None of those four changes what gets *sent*, because a band is transmitted as its
+midpoint rather than its edge. They do change what gets *read back*: ask that
+imported definition what a value of 85 means on key priority and it says `last`,
+where the corrected file says `high`. So an import is reliable about which
+controller does what, and not yet reliable about what its values mean.
 
 **And a definition you supply yourself is yours.** Files you drop beside your
 composition or into your own library beat the ones bundled here, by design, and
