@@ -55,6 +55,25 @@ class TestGMInstrumentNames:
 		assert pymididefs.gm.GM_INSTRUMENT_NAMES[40] == "Violin"
 		assert pymididefs.gm.GM_INSTRUMENT_NAMES[127] == "Gunshot"
 
+	def test_names_are_gm1s_own_spelling (self) -> None:
+		"""RP-003 Table 2, character for character, where it differs from the tidy form.
+
+		0.4 and earlier gave "Clavinet", "Guitar Harmonics", "Synth Strings 1",
+		"Synth Brass 1" and "Bagpipe", while claiming to follow the specification.
+		"""
+		assert pymididefs.gm.GM_INSTRUMENT_NAMES[7] == "Clavi"
+		assert pymididefs.gm.GM_INSTRUMENT_NAMES[31] == "Guitar harmonics"
+		assert pymididefs.gm.GM_INSTRUMENT_NAMES[50] == "SynthStrings 1"
+		assert pymididefs.gm.GM_INSTRUMENT_NAMES[51] == "SynthStrings 2"
+		assert pymididefs.gm.GM_INSTRUMENT_NAMES[62] == "SynthBrass 1"
+		assert pymididefs.gm.GM_INSTRUMENT_NAMES[63] == "SynthBrass 2"
+		assert pymididefs.gm.GM_INSTRUMENT_NAMES[109] == "Bag pipe"
+
+	def test_identifiers_keep_their_spelling (self) -> None:
+		"""Constant names and map keys are identifiers, so the corrections leave them alone."""
+		assert pymididefs.gm.CLAVINET == 7
+		assert pymididefs.gm.GM_INSTRUMENT_MAP["bagpipe"] == 109
+
 
 class TestGMFamilies:
 

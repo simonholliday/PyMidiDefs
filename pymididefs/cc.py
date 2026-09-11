@@ -1,8 +1,11 @@
 """MIDI Control Change (CC) number assignments.
 
-The MIDI specification defines 128 controller numbers (0–127).  This module
-provides named constants for all controllers that have a defined function in
-the MIDI 1.0 Detailed Specification.
+A Control Change message carries a controller number from 0 to 127.  The MIDI
+1.0 Detailed Specification counts 0–119 as controllers and gives 120–127 to
+Channel Mode messages, which share the Control Change status byte; both are
+here, along with what later MMA documents added -- CC 88 (CA-031), defaults
+for Sound Controllers 6–9 (RP-021), and new defaults for Effects 1 and 3
+(RP-023).
 
 Two kinds of number are therefore absent, and the rule is worth stating rather
 than the list, which falls out of date every time the map changes:
@@ -24,7 +27,10 @@ Two ways to use this module::
 	# As a lookup dictionary
 	pymididefs.cc.CC_MAP["sustain_pedal"]  # 64
 
-Source: MIDI 1.0 Detailed Specification, Table III — Control Change Messages.
+Sources: MIDI 1.0 Detailed Specification, Table III — Controller Numbers, and
+its Channel Mode messages; MMA CA-031 (CC 88); RP-021 (defaults for CC 75–78);
+RP-023 (the defaults of CC 91 and 93).  midi.org's public Control Change table
+collects all of them.
 """
 
 import typing
@@ -90,23 +96,25 @@ SUSTAIN_PEDAL       = 64  # Damper Pedal (Sustain)
 PORTAMENTO_ON_OFF   = 65  # Portamento On/Off
 SOSTENUTO_PEDAL     = 66  # Sostenuto
 SOFT_PEDAL          = 67  # Soft Pedal
-LEGATO_PEDAL        = 68  # Legato Footswitch
+LEGATO_PEDAL        = 68  # Legato Footswitch (0–63 Normal, 64–127 Legato)
 HOLD_2              = 69  # Hold 2
 
 
 # ── Sound Controllers (70–79) ────────────────────────────────────────────────
-# Defined by General MIDI Level 2 for real-time timbre adjustment.
+# Sound Controllers 1–10.  MIDI 1.0 defines all ten and gives defaults for 1–5;
+# RP-021 adds defaults for 6–9 and leaves 10 without one.  The constants for 71
+# and 74 are named after General MIDI 2's use of those defaults.
 
 SOUND_VARIATION     = 70  # Sound Controller 1  (default: Sound Variation)
-FILTER_RESONANCE    = 71  # Sound Controller 2  (default: Timbre / Filter Resonance)
+FILTER_RESONANCE    = 71  # Sound Controller 2  (default: Timbre/Harmonic Intensity; GM2: Filter Resonance)
 RELEASE_TIME        = 72  # Sound Controller 3  (default: Release Time)
 ATTACK_TIME         = 73  # Sound Controller 4  (default: Attack Time)
-FILTER_CUTOFF       = 74  # Sound Controller 5  (default: Brightness / Filter Cutoff)
-SOUND_CONTROL_6     = 75  # Sound Controller 6  (default: Decay Time — GM2)
-SOUND_CONTROL_7     = 76  # Sound Controller 7  (default: Vibrato Rate — GM2)
-SOUND_CONTROL_8     = 77  # Sound Controller 8  (default: Vibrato Depth — GM2)
-SOUND_CONTROL_9     = 78  # Sound Controller 9  (default: Vibrato Delay — GM2)
-SOUND_CONTROL_10    = 79  # Sound Controller 10 (default: undefined)
+FILTER_CUTOFF       = 74  # Sound Controller 5  (default: Brightness; GM2 sets filter cutoff with it)
+SOUND_CONTROL_6     = 75  # Sound Controller 6  (default: Decay Time — RP-021)
+SOUND_CONTROL_7     = 76  # Sound Controller 7  (default: Vibrato Rate — RP-021)
+SOUND_CONTROL_8     = 77  # Sound Controller 8  (default: Vibrato Depth — RP-021)
+SOUND_CONTROL_9     = 78  # Sound Controller 9  (default: Vibrato Delay — RP-021)
+SOUND_CONTROL_10    = 79  # Sound Controller 10 (default undefined — RP-021)
 
 
 # ── General Purpose Controllers (80–83) ──────────────────────────────────────
@@ -121,17 +129,19 @@ GENERAL_PURPOSE_8   = 83  # General Purpose Controller 8
 
 PORTAMENTO_CONTROL              = 84  # Portamento Control (source note for portamento)
 # CC 85–87: Undefined
-HIGH_RESOLUTION_VELOCITY_PREFIX = 88  # High Resolution Velocity Prefix
+HIGH_RESOLUTION_VELOCITY_PREFIX = 88  # High Resolution Velocity Prefix (CA-031)
 # CC 89–90: Undefined
 
 
-# ── Effects Send Levels (91–95) ──────────────────────────────────────────────
+# ── Effects Depths (91–95) ───────────────────────────────────────────────────
+# Effects 1–5 Depth.  Their former titles are "now the recommended defaults",
+# in the Detailed Specification's words; RP-023 later gave 91 and 93 new ones.
 
-REVERB_DEPTH        = 91  # Effects 1 Depth (default: Reverb Send Level)
-TREMOLO_DEPTH       = 92  # Effects 2 Depth (default: Tremolo Depth)
-CHORUS_DEPTH        = 93  # Effects 3 Depth (default: Chorus Send Level)
-CELESTE_DEPTH       = 94  # Effects 4 Depth (default: Celeste / Detune Depth)
-PHASER_DEPTH        = 95  # Effects 5 Depth (default: Phaser Depth)
+REVERB_DEPTH        = 91  # Effects 1 Depth (default: Reverb Send Level — RP-023; formerly External Effects Depth)
+TREMOLO_DEPTH       = 92  # Effects 2 Depth (default: Tremolo Depth, its former title)
+CHORUS_DEPTH        = 93  # Effects 3 Depth (default: Chorus Send Level — RP-023; formerly Chorus Depth)
+CELESTE_DEPTH       = 94  # Effects 4 Depth (default: Celeste [Detune] Depth, its former title)
+PHASER_DEPTH        = 95  # Effects 5 Depth (default: Phaser Depth, its former title)
 
 
 # ── Parameter Control (96–101) ───────────────────────────────────────────────
@@ -157,8 +167,8 @@ LOCAL_CONTROL_ON_OFF    = 122  # Local Control On/Off (0 = Off, 127 = On)
 ALL_NOTES_OFF           = 123  # All Notes Off (value = 0)
 OMNI_MODE_OFF           = 124  # Omni Mode Off (+ All Notes Off)
 OMNI_MODE_ON            = 125  # Omni Mode On (+ All Notes Off)
-MONO_MODE_ON            = 126  # Mono Mode On (+ All Notes Off)
-POLY_MODE_ON            = 127  # Poly Mode On (+ All Notes Off)
+MONO_MODE_ON            = 126  # Mono Mode On, Poly Off (+ All Notes Off; value = number of channels, 0 = as many as the receiver has voices)
+POLY_MODE_ON            = 127  # Poly Mode On, Mono Off (+ All Notes Off; value = 0)
 
 
 # ── Lookup dictionary ────────────────────────────────────────────────────────
@@ -231,7 +241,7 @@ CC_MAP: typing.Final[dict[str, int]] = {
 	"portamento_control":               PORTAMENTO_CONTROL,
 	"high_resolution_velocity_prefix":  HIGH_RESOLUTION_VELOCITY_PREFIX,
 
-	# Effects send levels
+	# Effects depths
 	"reverb_depth":         REVERB_DEPTH,
 	"tremolo_depth":        TREMOLO_DEPTH,
 	"chorus_depth":         CHORUS_DEPTH,
@@ -269,9 +279,10 @@ def pack_14bit (value: int) -> tuple[int, int]:
 	"""Split a 14-bit integer (0–16383) into ``(MSB, LSB)`` bytes.
 
 	Each returned byte is in the 7-bit range 0–127.  The tuple ordering
-	``(MSB, LSB)`` is the logical pairing — wire-transmission order is
-	message-dependent (Bank Select and RPN/NRPN parameter selection send MSB
-	first, but pitch bend sends LSB first).
+	``(MSB, LSB)`` is the logical pairing, not the order on the wire: pitch
+	bend and Song Position Pointer send the LSB first, and an RPN or NRPN
+	parameter number is two Control Change messages whose order the
+	specification does not fix.
 
 	>>> pack_14bit(0)
 	(0, 0)

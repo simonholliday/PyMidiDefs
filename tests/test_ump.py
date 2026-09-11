@@ -36,9 +36,23 @@ class TestMessageTypes:
 class TestUtilityStatus:
 
 	def test_values (self) -> None:
-		assert pymididefs.ump.UTIL_NOOP == 0x00
-		assert pymididefs.ump.UTIL_JR_CLOCK == 0x10
-		assert pymididefs.ump.UTIL_JR_TIMESTAMP == 0x20
+		"""The status is the nibble in bits 23–20, as M2-104-UM Appendix G gives it."""
+		assert pymididefs.ump.UTIL_NOOP == 0x0
+		assert pymididefs.ump.UTIL_JR_CLOCK == 0x1
+		assert pymididefs.ump.UTIL_JR_TIMESTAMP == 0x2
+		assert pymididefs.ump.UTIL_DELTA_CLOCKSTAMP_TPQ == 0x3
+		assert pymididefs.ump.UTIL_DELTA_CLOCKSTAMP == 0x4
+
+	def test_not_shifted_into_a_byte (self) -> None:
+		"""0.4 and earlier gave 0x10 and 0x20, the nibble shifted into its byte."""
+		for status in (
+			pymididefs.ump.UTIL_NOOP,
+			pymididefs.ump.UTIL_JR_CLOCK,
+			pymididefs.ump.UTIL_JR_TIMESTAMP,
+			pymididefs.ump.UTIL_DELTA_CLOCKSTAMP_TPQ,
+			pymididefs.ump.UTIL_DELTA_CLOCKSTAMP,
+		):
+			assert 0x0 <= status <= 0xF
 
 
 class TestMIDI2ChannelVoiceOpcodes:
@@ -112,6 +126,20 @@ class TestDataMessageStatus:
 		assert pymididefs.ump.DATA_CONTINUE == 0x2
 		assert pymididefs.ump.DATA_END == 0x3
 
+	def test_mixed_data_set (self) -> None:
+		assert pymididefs.ump.MIXED_DATA_SET_HEADER == 0x8
+		assert pymididefs.ump.MIXED_DATA_SET_PAYLOAD == 0x9
+
+
+class TestFormat:
+
+	def test_values (self) -> None:
+		"""The 2-bit Format field shared by Stream and Flex Data messages."""
+		assert pymididefs.ump.FORMAT_COMPLETE == 0x0
+		assert pymididefs.ump.FORMAT_START == 0x1
+		assert pymididefs.ump.FORMAT_CONTINUE == 0x2
+		assert pymididefs.ump.FORMAT_END == 0x3
+
 
 class TestStreamMessages:
 
@@ -130,6 +158,60 @@ class TestStreamMessages:
 		assert pymididefs.ump.FUNCTION_BLOCK_DISCOVERY == 0x10
 		assert pymididefs.ump.FUNCTION_BLOCK_INFO == 0x11
 		assert pymididefs.ump.FUNCTION_BLOCK_NAME == 0x12
+
+	def test_clip_messages (self) -> None:
+		assert pymididefs.ump.START_OF_CLIP == 0x20
+		assert pymididefs.ump.END_OF_CLIP == 0x21
+
+
+class TestFlexData:
+
+	def test_address (self) -> None:
+		assert pymididefs.ump.FLEX_ADDRESS_CHANNEL == 0x0
+		assert pymididefs.ump.FLEX_ADDRESS_GROUP == 0x1
+
+	def test_status_banks (self) -> None:
+		assert pymididefs.ump.FLEX_BANK_SETUP_PERFORMANCE == 0x00
+		assert pymididefs.ump.FLEX_BANK_METADATA_TEXT == 0x01
+		assert pymididefs.ump.FLEX_BANK_PERFORMANCE_TEXT == 0x02
+
+	def test_setup_and_performance (self) -> None:
+		"""Bank 0x00 skips 0x03 and 0x04, as Appendix G does."""
+		assert pymididefs.ump.FLEX_SET_TEMPO == 0x00
+		assert pymididefs.ump.FLEX_SET_TIME_SIGNATURE == 0x01
+		assert pymididefs.ump.FLEX_SET_METRONOME == 0x02
+		assert pymididefs.ump.FLEX_SET_KEY_SIGNATURE == 0x05
+		assert pymididefs.ump.FLEX_SET_CHORD_NAME == 0x06
+
+	def test_metadata_text_runs_0x00_to_0x0c (self) -> None:
+		in_order = [
+			pymididefs.ump.FLEX_UNKNOWN_METADATA_TEXT,
+			pymididefs.ump.FLEX_PROJECT_NAME,
+			pymididefs.ump.FLEX_COMPOSITION_NAME,
+			pymididefs.ump.FLEX_MIDI_CLIP_NAME,
+			pymididefs.ump.FLEX_COPYRIGHT_NOTICE,
+			pymididefs.ump.FLEX_COMPOSER_NAME,
+			pymididefs.ump.FLEX_LYRICIST_NAME,
+			pymididefs.ump.FLEX_ARRANGER_NAME,
+			pymididefs.ump.FLEX_PUBLISHER_NAME,
+			pymididefs.ump.FLEX_PRIMARY_PERFORMER_NAME,
+			pymididefs.ump.FLEX_ACCOMPANYING_PERFORMER_NAME,
+			pymididefs.ump.FLEX_RECORDING_DATE,
+			pymididefs.ump.FLEX_RECORDING_LOCATION,
+		]
+
+		assert in_order == list(range(0x0D))
+
+	def test_performance_text_runs_0x00_to_0x04 (self) -> None:
+		in_order = [
+			pymididefs.ump.FLEX_UNKNOWN_PERFORMANCE_TEXT,
+			pymididefs.ump.FLEX_LYRICS,
+			pymididefs.ump.FLEX_LYRICS_LANGUAGE,
+			pymididefs.ump.FLEX_RUBY,
+			pymididefs.ump.FLEX_RUBY_LANGUAGE,
+		]
+
+		assert in_order == list(range(0x05))
 
 
 class TestProtocol:

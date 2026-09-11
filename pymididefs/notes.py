@@ -1,7 +1,10 @@
 """MIDI note number constants and name/number conversion.
 
-Convention: **C4 = 60** (Middle C), matching the MIDI Manufacturers Association
-standard and most DAWs (Ableton, Logic, Reaper, FL Studio).
+Convention: **C4 = 60** (Middle C).  The MIDI specifications fix note 60 as
+middle C -- "Middle C has a reference value of 60" -- but name no octaves.
+Calling it C4 is scientific pitch notation, which Roland and Reaper use too;
+Logic Pro calls the same note C3, and other software differs again.  Only the
+number goes over the wire, so the name is a display choice.
 
 Notes are named ``<Pitch><Octave>`` for naturals, ``<Pitch>S<Octave>`` for
 sharps, and ``<Pitch>B<Octave>`` for flats.  Flats (``DB``, ``EB``, ``GB``,
@@ -19,8 +22,9 @@ For string-based access use :func:`name_to_note` and :func:`note_to_name`::
 	pymididefs.notes.name_to_note("Db4")  # 61
 	pymididefs.notes.note_to_name(61)     # "C#4"
 
-Source: MIDI 1.0 Detailed Specification, §2 — Data Format.
-Note numbering: 0–127 where Middle C (C4) = 60.
+Sources: MIDI 1.0 Detailed Specification, "Note Number" (note 60 is middle C);
+General MIDI 2 (note 69 is tuned to 440 Hz).
+Note numbering: 0–127 where Middle C = 60.
 """
 
 

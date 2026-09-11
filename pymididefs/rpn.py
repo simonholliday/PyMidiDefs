@@ -18,8 +18,11 @@ The MIDI 2.0 successor to RPN/NRPN is the Registered Controller / Assignable
 Controller message type — see ``pymididefs.ump.REGISTERED_CC`` and
 ``ASSIGNABLE_CC``.
 
-Source: MIDI 1.0 Detailed Specification (RPN definitions) and General MIDI 2
-Specification (adds Modulation Depth Range RPN).
+Sources: MIDI 1.0 Detailed Specification (RPN definitions); MMA CA-026, which
+defines Modulation Depth Range, and General MIDI 2, which requires it; CA-034
+and the MPE specification (the MPE Configuration Message); RP-049 (the 3D
+Sound Controllers).  midi.org's public Control Change page carries the whole
+registered parameter table.
 """
 
 import typing
@@ -31,16 +34,31 @@ import typing
 PARAMETER_MAX = 16383
 
 
-# ── Standard Registered Parameter Numbers ────────────────────────────────────
-# Stored as the 14-bit integer (MSB << 7 | LSB).  All standard RPNs use
-# MSB = 0, so these values equal their LSB.
+# ── Registered Parameter Numbers under MSB 0 ─────────────────────────────────
+# Stored as the 14-bit integer (MSB << 7 | LSB).  These all have MSB 0, so each
+# equals its LSB.
 
 PITCH_BEND_SENSITIVITY  = 0   # (0, 0) — required by GM1
 CHANNEL_FINE_TUNING     = 1   # (0, 1) — required by GM1
 CHANNEL_COARSE_TUNING   = 2   # (0, 2) — required by GM1
 TUNING_PROGRAM_SELECT   = 3   # (0, 3)
 TUNING_BANK_SELECT      = 4   # (0, 4)
-MODULATION_DEPTH_RANGE  = 5   # (0, 5) — added in GM2
+MODULATION_DEPTH_RANGE  = 5   # (0, 5) — CA-026; required by GM2
+MPE_CONFIGURATION       = 6   # (0, 6) — MPE Configuration Message, CA-034
+
+
+# ── Three Dimensional Sound Controllers, under MSB 0x3D (RP-049) ─────────────
+# Stored the same way, so each is 0x3D << 7 | LSB, from 7808 to 7816.
+
+SOUND_3D_AZIMUTH_ANGLE              = 7808  # (0x3D, 0x00) — Azimuth Angle
+SOUND_3D_ELEVATION_ANGLE            = 7809  # (0x3D, 0x01) — Elevation Angle
+SOUND_3D_GAIN                       = 7810  # (0x3D, 0x02) — Gain
+SOUND_3D_DISTANCE_RATIO             = 7811  # (0x3D, 0x03) — Distance Ratio
+SOUND_3D_MAXIMUM_DISTANCE           = 7812  # (0x3D, 0x04) — Maximum Distance
+SOUND_3D_GAIN_AT_MAXIMUM_DISTANCE   = 7813  # (0x3D, 0x05) — Gain at Maximum Distance
+SOUND_3D_REFERENCE_DISTANCE_RATIO   = 7814  # (0x3D, 0x06) — Reference Distance Ratio
+SOUND_3D_PAN_SPREAD_ANGLE           = 7815  # (0x3D, 0x07) — Pan Spread Angle
+SOUND_3D_ROLL_ANGLE                 = 7816  # (0x3D, 0x08) — Roll Angle
 
 
 # ── NULL parameter ───────────────────────────────────────────────────────────
@@ -60,5 +78,17 @@ RPN_MAP: typing.Final[dict[str, int]] = {
 	"tuning_program_select":    TUNING_PROGRAM_SELECT,
 	"tuning_bank_select":       TUNING_BANK_SELECT,
 	"modulation_depth_range":   MODULATION_DEPTH_RANGE,
+	"mpe_configuration":        MPE_CONFIGURATION,
+
+	"sound_3d_azimuth_angle":               SOUND_3D_AZIMUTH_ANGLE,
+	"sound_3d_elevation_angle":             SOUND_3D_ELEVATION_ANGLE,
+	"sound_3d_gain":                        SOUND_3D_GAIN,
+	"sound_3d_distance_ratio":              SOUND_3D_DISTANCE_RATIO,
+	"sound_3d_maximum_distance":            SOUND_3D_MAXIMUM_DISTANCE,
+	"sound_3d_gain_at_maximum_distance":    SOUND_3D_GAIN_AT_MAXIMUM_DISTANCE,
+	"sound_3d_reference_distance_ratio":    SOUND_3D_REFERENCE_DISTANCE_RATIO,
+	"sound_3d_pan_spread_angle":            SOUND_3D_PAN_SPREAD_ANGLE,
+	"sound_3d_roll_angle":                  SOUND_3D_ROLL_ANGLE,
+
 	"null_parameter":           NULL_PARAMETER,
 }

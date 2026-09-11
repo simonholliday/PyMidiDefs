@@ -18,7 +18,8 @@ Two ways to use this module::
 	# Human-readable name by program number
 	pymididefs.gm.GM_INSTRUMENT_NAMES[40]  # "Violin"
 
-Source: General MIDI Level 1 Specification — Instrument Patch Map.
+Source: General MIDI System Level 1 (MMA RP-003) — Table 1, the instrument
+families, and Table 2, the General MIDI Sound Set.
 """
 
 import typing
@@ -30,8 +31,8 @@ ACOUSTIC_GRAND_PIANO    = 0
 BRIGHT_ACOUSTIC_PIANO   = 1
 ELECTRIC_GRAND_PIANO    = 2
 HONKY_TONK_PIANO        = 3
-ELECTRIC_PIANO_1        = 4   # Rhodes
-ELECTRIC_PIANO_2        = 5   # Chorused
+ELECTRIC_PIANO_1        = 4
+ELECTRIC_PIANO_2        = 5
 HARPSICHORD             = 6
 CLAVINET                = 7
 
@@ -203,13 +204,19 @@ GUNSHOT                 = 127
 
 # ── Human-readable instrument names ──────────────────────────────────────────
 # Tuple of 128 instrument name strings indexed by program number.
-# Names follow the official GM Level 1 specification.
+# Names are GM Level 1's own, character for character, as RP-003's Table 2
+# prints them -- "Clavi", "SynthStrings 1", "Bag pipe" -- rather than tidied.
+# The one exception: two of its cells are too narrow and lose their closing
+# parenthesis, "Acoustic Guitar (nylon" and "Electric Guitar (muted", so it
+# is restored here.
+# The constant names and GM_INSTRUMENT_MAP keys are identifiers rather than
+# transcriptions, so CLAVINET and "clavinet" keep their longer spelling.
 
 GM_INSTRUMENT_NAMES: typing.Final[tuple[str, ...]] = (
 	# Piano (0–7)
 	"Acoustic Grand Piano", "Bright Acoustic Piano", "Electric Grand Piano",
 	"Honky-tonk Piano", "Electric Piano 1", "Electric Piano 2",
-	"Harpsichord", "Clavinet",
+	"Harpsichord", "Clavi",
 
 	# Chromatic Percussion (8–15)
 	"Celesta", "Glockenspiel", "Music Box", "Vibraphone",
@@ -223,7 +230,7 @@ GM_INSTRUMENT_NAMES: typing.Final[tuple[str, ...]] = (
 	"Acoustic Guitar (nylon)", "Acoustic Guitar (steel)",
 	"Electric Guitar (jazz)", "Electric Guitar (clean)",
 	"Electric Guitar (muted)", "Overdriven Guitar",
-	"Distortion Guitar", "Guitar Harmonics",
+	"Distortion Guitar", "Guitar harmonics",
 
 	# Bass (32–39)
 	"Acoustic Bass", "Electric Bass (finger)", "Electric Bass (pick)",
@@ -235,13 +242,13 @@ GM_INSTRUMENT_NAMES: typing.Final[tuple[str, ...]] = (
 	"Tremolo Strings", "Pizzicato Strings", "Orchestral Harp", "Timpani",
 
 	# Ensemble (48–55)
-	"String Ensemble 1", "String Ensemble 2", "Synth Strings 1",
-	"Synth Strings 2", "Choir Aahs", "Voice Oohs",
+	"String Ensemble 1", "String Ensemble 2", "SynthStrings 1",
+	"SynthStrings 2", "Choir Aahs", "Voice Oohs",
 	"Synth Voice", "Orchestra Hit",
 
 	# Brass (56–63)
 	"Trumpet", "Trombone", "Tuba", "Muted Trumpet",
-	"French Horn", "Brass Section", "Synth Brass 1", "Synth Brass 2",
+	"French Horn", "Brass Section", "SynthBrass 1", "SynthBrass 2",
 
 	# Reed (64–71)
 	"Soprano Sax", "Alto Sax", "Tenor Sax", "Baritone Sax",
@@ -268,7 +275,7 @@ GM_INSTRUMENT_NAMES: typing.Final[tuple[str, ...]] = (
 
 	# Ethnic (104–111)
 	"Sitar", "Banjo", "Shamisen", "Koto",
-	"Kalimba", "Bagpipe", "Fiddle", "Shanai",
+	"Kalimba", "Bag pipe", "Fiddle", "Shanai",
 
 	# Percussive (112–119)
 	"Tinkle Bell", "Agogo", "Steel Drums", "Woodblock",

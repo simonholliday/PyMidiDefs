@@ -53,7 +53,8 @@ class TestCCConstants:
 	def test_only_undefined_controllers_are_absent (self) -> None:
 		"""The controllers we leave out are exactly the ones with no standard name.
 
-		These are the numbers MIDI 1.0 Table III leaves undefined, plus the LSB
+		These are the numbers MIDI 1.0 Table III leaves undefined (bar CC 88,
+		which CA-031 defined later), plus the LSB
 		slot belonging to each undefined controller below 32 — the low byte of a
 		controller that does not exist does not exist either.  Anything else
 		missing from the map is an omission, not a decision.

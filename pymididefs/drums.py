@@ -2,15 +2,16 @@
 
 Standard MIDI percussion assignments for channel 10 (0-indexed channel 9).
 
-**Notes 35–81 are General MIDI Level 1** and are supported by virtually all
-GM-compatible instruments, drum machines, and DAWs.
+**Notes 35–81 are General MIDI Level 1**, and every GM Level 1 sound generator
+is required to have them: GM1 asks for 'a minimum of 47 preset percussion
+sounds conforming to the "GM Percussion Map"'.
 
-**Notes 27–34 and 82–87 are not.** They are the fourteen extended sounds that
-originated in Roland GS and were later carried into General MIDI 2, and they
-bracket the GM Level 1 block on either side.  They are widely implemented —
-GS, GM2 and XG devices all have them — but a GM Level 1 device is not required
-to, and will simply be silent.  Check the target before using ``HIGH_Q``,
-``CASTANETS`` or any of their neighbours.
+**Notes 27–34 and 82–87 are not.** They are the fourteen extended sounds of
+Roland's GS Standard Set, documented in 1991 and adopted by General MIDI 2 in
+1999, and they bracket the GM Level 1 block on either side.  GS and GM2 devices
+have them at these notes; a GM Level 1 device is not required to, and Yamaha's
+XG puts most of them at other notes.  Check the target before using
+``HIGH_Q``, ``CASTANETS`` or any of their neighbours.
 
 Two ways to use this module::
 
@@ -23,14 +24,15 @@ Two ways to use this module::
 	# As a lookup dictionary
 	pymididefs.drums.GM_DRUM_MAP["kick_1"]  # 36
 
-The four instruments GM defines in numbered pairs — kick, snare, crash, ride —
-also have unnumbered *primary aliases* pointing to the "1" variant: the
-``KICK`` / ``SNARE`` / ``CRASH`` / ``RIDE`` constants and the
-``GM_DRUM_PRIMARY_ALIASES`` lookup, kept separate from ``GM_DRUM_MAP`` so the
-canonical key map stays one name per note.
+Four sounds come in numbered pairs here — kick, snare, crash, ride — and each
+also has an unnumbered *primary alias* pointing to its "1": the ``KICK`` /
+``SNARE`` / ``CRASH`` / ``RIDE`` constants and the ``GM_DRUM_PRIMARY_ALIASES``
+lookup, kept separate from ``GM_DRUM_MAP`` so the canonical key map stays one
+name per note.
 
-Sources: General MIDI Level 1 Specification — Percussion Key Map (35–81);
-General MIDI 2 Specification and Roland GS (27–34 and 82–87).
+Sources: General MIDI System Level 1 (MMA RP-003), Table 3 — General MIDI
+Percussion Map (35–81); General MIDI 2 and Roland's GS Standard Set (27–34 and
+82–87).
 Note range: 27 (High Q) through 87 (Open Surdo).
 Channel: 10 (1-indexed) / 9 (0-indexed).
 """
@@ -40,7 +42,7 @@ import typing
 
 # ── Percussion Key Map (notes 27–87) ─────────────────────────────────────────
 # Organised by instrument family for readability.  Notes 35–81 are GM Level 1;
-# the groups marked "extended" below are GS / GM2 and may be silent on a
+# the groups marked "extended" below are GS / GM2 and may be missing on a
 # GM Level 1 device.
 
 # Electronic percussion / effects (27–34) — extended, not GM Level 1
@@ -65,13 +67,13 @@ SNARE_2             = 40  # Electric Snare
 
 # Toms (41, 43, 45, 47, 48, 50)
 LOW_FLOOR_TOM       = 41  # Low Floor Tom
-HI_HAT_CLOSED       = 42  # Closed Hi-Hat
+HI_HAT_CLOSED       = 42  # Closed Hi Hat
 HIGH_FLOOR_TOM      = 43  # High Floor Tom
 HI_HAT_PEDAL        = 44  # Pedal Hi-Hat
 LOW_TOM             = 45  # Low Tom
 HI_HAT_OPEN         = 46  # Open Hi-Hat
 LOW_MID_TOM         = 47  # Low-Mid Tom
-HIGH_MID_TOM        = 48  # Hi-Mid Tom
+HIGH_MID_TOM        = 48  # Hi Mid Tom
 CRASH_1             = 49  # Crash Cymbal 1
 HIGH_TOM            = 50  # High Tom
 
@@ -205,15 +207,20 @@ GM_DRUM_MAP: typing.Final[dict[str, int]] = {
 
 
 # ── Primary aliases ──────────────────────────────────────────────────────────
-# General MIDI defines four instruments in numbered pairs — two kicks, two
-# snares, two crashes, two rides.  These unnumbered aliases point to the
-# GM-designated *primary* (the "1" variant): Bass Drum 1, Acoustic Snare,
-# Crash Cymbal 1, Ride Cymbal 1 — the notes every GM kit treats as the main
-# kick / snare / crash / ride.  Use ``KICK`` when you just want "the kick"
-# rather than choosing between the two.
+# General MIDI numbers two of these pairs itself: Crash Cymbal 1 and 2 (49, 57)
+# and Ride Cymbal 1 and 2 (51, 59).  It does not number the kicks or snares as
+# pairs — it calls them Acoustic Bass Drum and Bass Drum 1 (35, 36), and
+# Acoustic Snare and Electric Snare (38, 40).  The KICK_1/KICK_2 and
+# SNARE_1/SNARE_2 numbering is Roland GS's, whose Standard Set calls them Kick
+# Drum 2 and Kick Drum 1, and Snare Drum 1 and Snare Drum 2.
+#
+# No specification designates a primary.  These unnumbered aliases point at
+# the "1" of each pair — Bass Drum 1, Acoustic Snare, Crash Cymbal 1, Ride
+# Cymbal 1 — by this package's choice, so ``KICK`` can mean "the kick" without
+# choosing between the two.
 #
 # Kept separate from GM_DRUM_MAP, which stays one name per note (the canonical
-# percussion key map).  Only these four instruments come in numbered pairs; the
+# percussion key map).  Only these four sounds come in numbered pairs; the
 # single-instance voices (closed/open/pedal hi-hat, side stick, cowbell, …) are
 # already unnumbered.  Ambiguous cases with no clear primary (e.g. the six toms)
 # are deliberately not aliased.

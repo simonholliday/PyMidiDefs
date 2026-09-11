@@ -22,12 +22,12 @@ class TestDrumConstants:
 		assert pymididefs.drums.HI_HAT_OPEN == 46
 
 	def test_range (self) -> None:
-		"""GM percussion key map spans notes 27–87."""
+		"""The key map spans notes 27–87: GM Level 1's 35–81 plus the GS/GM2 extras."""
 		assert pymididefs.drums.HIGH_Q == 27
 		assert pymididefs.drums.OPEN_SURDO == 87
 
 	def test_all_values_in_range (self) -> None:
-		"""Every drum constant must be in the GM percussion range 27–87."""
+		"""Every drum constant is within the map's range, 27–87."""
 		for name, value in pymididefs.drums.GM_DRUM_MAP.items():
 			assert 27 <= value <= 87, f"GM_DRUM_MAP[{name!r}] = {value} is outside 27–87"
 
@@ -67,7 +67,7 @@ class TestGMDrumMap:
 class TestPrimaryAliases:
 
 	def test_constants_point_to_primary (self) -> None:
-		"""Unnumbered names alias the GM-designated primary (the '1' variant)."""
+		"""Unnumbered names alias the '1' of each pair, by this package's choice."""
 		assert pymididefs.drums.KICK == pymididefs.drums.KICK_1 == 36
 		assert pymididefs.drums.SNARE == pymididefs.drums.SNARE_1 == 38
 		assert pymididefs.drums.CRASH == pymididefs.drums.CRASH_1 == 49

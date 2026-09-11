@@ -18,18 +18,18 @@ class TestMetaEvents:
 	def test_sequence_number (self) -> None:
 		assert pymididefs.meta.SEQUENCE_NUMBER == 0x00
 
-	def test_rp019_text_event (self) -> None:
-		"""Device Name sits in SMF's reserved text range, named by RP-019."""
+	def test_rp019_text_events (self) -> None:
+		"""Program Name and Device Name sit in SMF's reserved text range, named by RP-019.
+
+		0x08 was held back from 0.3.0 until RP-019 itself had been read. It has:
+		"FF 08 len text PROGRAM NAME" and "FF 09 len text DEVICE NAME".
+		"""
+		assert pymididefs.meta.PROGRAM_NAME == 0x08
 		assert pymididefs.meta.DEVICE_NAME == 0x09
 
-	def test_program_name_is_absent (self) -> None:
-		"""0x08 stays out until somebody confirms it against RP-019.
-
-		Pinned so it is a decision rather than an oversight: the value is
-		believed to be Program Name and is corroborated by nothing to hand, so
-		it is left out rather than shipped on a recollection.
-		"""
-		assert not hasattr(pymididefs.meta, "PROGRAM_NAME")
+	def test_xmf_patch_type_prefix (self) -> None:
+		"""RP-032 defines it as "FF 60 <len> <param>"."""
+		assert pymididefs.meta.XMF_PATCH_TYPE_PREFIX == 0x60
 
 	def test_control_events (self) -> None:
 		assert pymididefs.meta.CHANNEL_PREFIX == 0x20

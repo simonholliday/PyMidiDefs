@@ -31,8 +31,11 @@ CHANNEL_AFTERTOUCH  = 0xD0  # Channel Pressure         (+ pressure)
 PITCH_BEND          = 0xE0  # Pitch Bend Change        (+ LSB, MSB)
 
 
-# ── System Common Messages (0xF0–0xF7) ──────────────────────────────────────
-# Not channel-specific.  Intended for all receivers on the MIDI bus.
+# ── System Exclusive and System Common Messages (0xF0–0xF7) ─────────────────
+# Not channel-specific.  The Detailed Specification makes System Exclusive
+# (0xF0, ended by 0xF7) a type of system message of its own, beside Common and
+# Real-Time: System Common proper is 0xF1–0xF7, meant for every receiver, while
+# a non-universal Exclusive message is for the devices its manufacturer ID names.
 
 SYSEX_START         = 0xF0  # System Exclusive start     (followed by data, then SYSEX_END)
 TIME_CODE           = 0xF1  # MIDI Time Code Quarter Frame (+ data)

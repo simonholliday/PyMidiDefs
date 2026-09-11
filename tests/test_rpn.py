@@ -27,8 +27,35 @@ class TestRPNConstants:
 		assert pymididefs.rpn.TUNING_BANK_SELECT == 4
 
 	def test_modulation_depth_range (self) -> None:
-		"""(0, 5) — added in GM2."""
+		"""(0, 5) — defined by CA-026, required by GM2."""
 		assert pymididefs.rpn.MODULATION_DEPTH_RANGE == 5
+
+	def test_mpe_configuration (self) -> None:
+		"""(0, 6) — the MPE spec: 'defined as Registered Parameter Number "00 06"'."""
+		assert pymididefs.rpn.MPE_CONFIGURATION == 6
+
+
+class TestThreeDimensionalSoundControllers:
+
+	def test_they_sit_under_msb_0x3d (self) -> None:
+		"""RP-049's nine parameters are (0x3D, 0x00) to (0x3D, 0x08), in this order."""
+		in_order = [
+			pymididefs.rpn.SOUND_3D_AZIMUTH_ANGLE,
+			pymididefs.rpn.SOUND_3D_ELEVATION_ANGLE,
+			pymididefs.rpn.SOUND_3D_GAIN,
+			pymididefs.rpn.SOUND_3D_DISTANCE_RATIO,
+			pymididefs.rpn.SOUND_3D_MAXIMUM_DISTANCE,
+			pymididefs.rpn.SOUND_3D_GAIN_AT_MAXIMUM_DISTANCE,
+			pymididefs.rpn.SOUND_3D_REFERENCE_DISTANCE_RATIO,
+			pymididefs.rpn.SOUND_3D_PAN_SPREAD_ANGLE,
+			pymididefs.rpn.SOUND_3D_ROLL_ANGLE,
+		]
+
+		assert in_order == [pymididefs.cc.unpack_14bit(0x3D, lsb) for lsb in range(9)]
+
+	def test_they_pack_back_to_their_address (self) -> None:
+		"""What goes on the wire for Azimuth Angle is RPN MSB 61, LSB 0."""
+		assert pymididefs.cc.pack_14bit(pymididefs.rpn.SOUND_3D_AZIMUTH_ANGLE) == (0x3D, 0x00)
 
 
 class TestNullParameter:
@@ -84,15 +111,11 @@ class TestRPNMap:
 				f"RPN_MAP[{name!r}] = {value} is out of range"
 			)
 
-	def test_no_duplicate_standard_rpns (self) -> None:
-		"""The six standard RPNs each map to a unique parameter number."""
-		standard_keys = (
-			"pitch_bend_sensitivity",
-			"channel_fine_tuning",
-			"channel_coarse_tuning",
-			"tuning_program_select",
-			"tuning_bank_select",
-			"modulation_depth_range",
-		)
-		values = [pymididefs.rpn.RPN_MAP[k] for k in standard_keys]
+	def test_no_two_names_share_a_parameter (self) -> None:
+		"""Every entry in the map is a different parameter number."""
+		values = list(pymididefs.rpn.RPN_MAP.values())
 		assert len(values) == len(set(values))
+
+	def test_every_registered_parameter_is_in_the_map (self) -> None:
+		"""midi.org's table has seven under MSB 0, nine under MSB 0x3D, and NULL."""
+		assert len(pymididefs.rpn.RPN_MAP) == 17

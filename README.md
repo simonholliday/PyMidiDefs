@@ -18,9 +18,9 @@ assignments, program change values, status bytes. These numbers are defined
 by the MIDI specification and never change, yet most projects end up
 re-defining them from scratch or copying them from unreliable sources.
 
-PyMidiDefs gives you a single, authoritative package with every constant
-sourced directly from the official MIDI specifications. It
-has no runtime dependencies and works with any MIDI library or framework --
+PyMidiDefs gives you a single, authoritative package with every protocol
+constant taken directly from the official MIDI specifications. It has no
+runtime dependencies and works with any MIDI library or framework --
 python-rtmidi, mido, pygame.midi, or your own socket-level implementation.
 
 It holds only what the specifications define. What a *particular model* of
@@ -35,27 +35,30 @@ which builds on this package. Version 0.4.0 carried it here as
 
 MIDI (Musical Instrument Digital Interface) is a technical standard for
 communication between electronic musical instruments, computers, and audio
-devices. It was conceived in the early 1980s by Dave Smith of Sequential
-Circuits and Ikutaro Kakehashi of Roland, who proposed a Universal
-Synthesizer Interface to allow instruments from different manufacturers to
-talk to each other. The MIDI 1.0 Detailed Specification was published in
-August 1983 by the International MIDI Association (now the MIDI
-Manufacturers Association, MMA) and has remained backwards-compatible ever
-since.
+devices. It began in 1981, when Ikutaro Kakehashi of Roland proposed an
+international standard for synthesizers to talk to each other, and Dave Smith
+of Sequential Circuits outlined a Universal Synthesizer Interface, developed
+with Chet Wood and presented to the Audio Engineering Society that autumn. The
+MIDI 1.0 specification was published in August 1983,
+with its copyright assigned to the International MIDI Association (IMA) --
+one of three bodies, with the MIDI Manufacturers Association (MMA) and Japan's
+JMSC, that formed independently to manage MIDI's development. It has remained
+backwards-compatible ever since.
 
 General MIDI (GM), standardised in 1991, defined a common set of 128
 instrument sounds and a percussion key map so that a MIDI file created on
 one device would sound broadly similar on another. The Standard MIDI File
-(SMF) format, also formalised in the early 1990s, became the universal way
+(SMF) format, first published in 1988, became the universal way
 to store and exchange MIDI sequences.
 
-In January 2020, the MIDI Association announced MIDI 2.0 -- the first major
-update to the protocol in nearly four decades. MIDI 2.0 introduces the
-Universal MIDI Packet (UMP) format with higher-resolution velocity and
-controller values, per-note controllers, and bidirectional communication via
-MIDI-CI (Capability Inquiry) for automatic device configuration, profile
-negotiation, and property exchange. MIDI 2.0 is a strict superset of MIDI
-1.0; all existing MIDI 1.0 definitions remain valid.
+In January 2020, the MIDI Association and AMEI adopted the core specifications
+of MIDI 2.0 -- the first major update to the protocol in nearly four decades --
+and published them the following month. MIDI 2.0 introduces the Universal MIDI
+Packet (UMP) format with higher-resolution velocity and controller values,
+per-note controllers, and bidirectional communication via MIDI-CI (Capability
+Inquiry) for automatic device configuration, profile negotiation, and property
+exchange. It extends MIDI 1.0 rather than replacing it: MIDI 1.0 messages
+remain valid, and the Universal MIDI Packet carries them too.
 
 ## Installation
 
@@ -77,12 +80,12 @@ pip install git+https://github.com/simonholliday/PyMidiDefs.git
 |--------|-------------|
 | `pymididefs.notes` | MIDI note numbers (C-1 to G9) and name/number conversion |
 | `pymididefs.cc` | Control Change number assignments (0-127), plus 14-bit pack/unpack helpers |
-| `pymididefs.rpn` | Standard Registered Parameter Numbers (RPN) and the 14-bit parameter conventions shared with NRPN |
+| `pymididefs.rpn` | Registered Parameter Numbers (RPN), including MPE and the 3D Sound Controllers, and the 14-bit parameter conventions shared with NRPN |
 | `pymididefs.drums` | General MIDI percussion key map — GM Level 1 (notes 35-81) plus the extended GS/GM2 sounds |
 | `pymididefs.gm` | General MIDI Level 1 instrument program numbers and families |
 | `pymididefs.status` | MIDI 1.0 status bytes (channel voice, system common, system real-time) |
-| `pymididefs.meta` | Standard MIDI File meta-event type bytes, including RP-019 and the obsolete MIDI Port event |
-| `pymididefs.ump` | MIDI 2.0 Universal MIDI Packet message types and constants |
+| `pymididefs.meta` | Standard MIDI File meta-event type bytes, including RP-019, RP-032 and the obsolete MIDI Port event |
+| `pymididefs.ump` | MIDI 2.0 Universal MIDI Packet message types and constants, including Flex Data |
 | `pymididefs.ci` | MIDI 2.0 Capability Inquiry (MIDI-CI) constants |
 
 ## Usage
@@ -128,7 +131,7 @@ import pymididefs.cc
 
 # Standard Registered Parameter Numbers
 pymididefs.rpn.PITCH_BEND_SENSITIVITY  # 0
-pymididefs.rpn.MODULATION_DEPTH_RANGE  # 5  (added in GM2)
+pymididefs.rpn.MODULATION_DEPTH_RANGE  # 5  (CA-026; required by GM2)
 pymididefs.rpn.NULL_PARAMETER          # 16383  (sent as MSB=127, LSB=127)
 
 # 14-bit pack/unpack — works for any MIDI 1.0 14-bit value
@@ -155,18 +158,35 @@ pymididefs.ci.PROFILE_INQUIRY # 0x20
 
 ## Sources
 
-All definitions are sourced from the official MIDI specifications published by
-the [MIDI Association](https://midi.org/specs):
+Every constant is transcribed from the specifications published by the
+[MIDI Association](https://midi.org/specs) and AMEI, its Japanese counterpart:
 
-- [MIDI 1.0 Detailed Specification](https://midi.org/midi-1-0-detailed-specification) (MMA/AMEI)
-- [General MIDI Level 1 Specification](https://midi.org/general-midi-level-1)
+- [MIDI 1.0 Detailed Specification](https://midi.org/midi-1-0-detailed-specification) (MMA/AMEI), with what later documents added to it: CA-026 (Modulation Depth Range), CA-031 (High Resolution Velocity Prefix), CA-034 and the MPE specification (the MPE Configuration Message), RP-021 and RP-023 (controller defaults), and RP-049 (3D Sound Controllers)
+- [General MIDI Level 1 Specification](https://midi.org/general-midi-level-1) (RP-003)
 - [General MIDI 2 Specification](https://midi.org/general-midi-2)
-- [Standard MIDI File 1.0 Specification](https://midi.org/standard-midi-files)
-- [M2-104-UM v1.1 — Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification](https://midi.org/universal-midi-packet-ump-and-midi-2-0-protocol-specification)
-- [M2-101-UM v1.2 — MIDI-CI Specification](https://midi.org/midi-ci-specification)
+- [Standard MIDI File 1.0 Specification](https://midi.org/standard-midi-files) (RP-001), with RP-019 (Program Name, Device Name) and RP-032 (XMF Patch Type Prefix)
+- [M2-104-UM v1.1.2 — Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification](https://midi.org/universal-midi-packet-ump-and-midi-2-0-protocol-specification)
+- [M2-101-UM v1.2 — MIDI-CI Specification](https://midi.org/midi-ci-specification). midi.org now serves v1.2.1, which is not publicly readable and has not been compared; the constants here were checked against v1.2
 
 Some specifications require a free [MIDI Association membership](https://midi.org/membership)
 to download.
+
+A few things are not transcribed from those documents, and the modules that
+hold them say so:
+
+- **`pymididefs.meta.MIDI_PORT` (0x21) is in no specification.** It is an
+  unofficial convention, now obsolete, and it is here because real files still
+  carry it and a reader should be able to name what it meets.
+- **The drum numbering `KICK_1`/`KICK_2` and `SNARE_1`/`SNARE_2` is Roland
+  GS's.** General MIDI names those notes Acoustic Bass Drum, Bass Drum 1,
+  Acoustic Snare and Electric Snare, and numbers only its crashes and rides as
+  pairs. The unnumbered `KICK`, `SNARE`, `CRASH` and `RIDE` aliases are this
+  package's own choice.
+- **The octave names are a convention.** The specifications fix note 60 as
+  middle C but name no octaves; this package calls it C4.
+
+The values here, and the prose around them, were last checked against these
+documents in September 2026.
 
 ## License
 

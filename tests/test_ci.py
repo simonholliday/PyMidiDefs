@@ -12,8 +12,26 @@ class TestSysExFraming:
 	def test_ci_sub_id (self) -> None:
 		assert pymididefs.ci.CI_SUB_ID == 0x0D
 
-	def test_broadcast_address (self) -> None:
-		assert pymididefs.ci.BROADCAST_ADDRESS == 0x7F
+	def test_device_ids (self) -> None:
+		"""M2-101-UM v1.2 Table 5: "7E: To/from Group", "7F: To/from Function Block"."""
+		assert pymididefs.ci.DEVICE_ID_GROUP == 0x7E
+		assert pymididefs.ci.DEVICE_ID_FUNCTION_BLOCK == 0x7F
+
+	def test_the_misleading_name_is_gone (self) -> None:
+		"""0x7F addresses a Function Block, not every device, so it is not called broadcast."""
+		assert not hasattr(pymididefs.ci, "BROADCAST_ADDRESS")
+
+
+class TestProtocolNegotiation:
+
+	def test_deprecated_messages_are_still_named (self) -> None:
+		"""Deprecated in MIDI-CI 1.2, and a device supporting them must still parse them."""
+		assert pymididefs.ci.PROTOCOL_NEGOTIATION == 0x10
+		assert pymididefs.ci.PROTOCOL_NEGOTIATION_REPLY == 0x11
+		assert pymididefs.ci.SET_NEW_PROTOCOL == 0x12
+		assert pymididefs.ci.TEST_NEW_PROTOCOL_I_TO_R == 0x13
+		assert pymididefs.ci.TEST_NEW_PROTOCOL_R_TO_I == 0x14
+		assert pymididefs.ci.CONFIRM_NEW_PROTOCOL == 0x15
 
 
 class TestDiscovery:
@@ -22,9 +40,34 @@ class TestDiscovery:
 		assert pymididefs.ci.DISCOVERY == 0x70
 		assert pymididefs.ci.DISCOVERY_REPLY == 0x71
 
+	def test_endpoint_information (self) -> None:
+		assert pymididefs.ci.ENDPOINT_INFO_INQUIRY == 0x72
+		assert pymididefs.ci.ENDPOINT_INFO_REPLY == 0x73
+
 	def test_management_messages (self) -> None:
+		assert pymididefs.ci.ACK == 0x7D
 		assert pymididefs.ci.INVALIDATE_MUID == 0x7E
 		assert pymididefs.ci.NAK == 0x7F
+
+	def test_sub_ids_are_distinct (self) -> None:
+		"""Every Sub-ID #2 names a different message.
+
+		Swept from the module, skipping the framing and addressing bytes, which
+		share values with Sub-IDs by coincidence rather than by meaning.
+		"""
+		framing = {
+			"UNIVERSAL_NON_REALTIME", "UNIVERSAL_REALTIME", "CI_SUB_ID",
+			"DEVICE_ID_GROUP", "DEVICE_ID_FUNCTION_BLOCK",
+			"BROADCAST_MUID", "CI_VERSION_1_1", "CI_VERSION_1_2",
+		}
+		sub_ids = [
+			value
+			for name, value in vars(pymididefs.ci).items()
+			if name.isupper() and isinstance(value, int) and name not in framing
+		]
+
+		assert len(sub_ids) == 38
+		assert len(sub_ids) == len(set(sub_ids))
 
 
 class TestProfileConfiguration:

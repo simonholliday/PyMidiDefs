@@ -56,6 +56,7 @@ exclude = [
 	".github",
 	".mypy_cache",
 	".pytest_cache",
+	".subroutine",
 ]
 
 [tool.pytest.ini_options]

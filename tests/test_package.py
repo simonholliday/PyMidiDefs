@@ -2,7 +2,10 @@
 
 import importlib
 import importlib.metadata
+import pathlib
 import pkgutil
+
+import pytest
 
 import pymididefs
 
@@ -71,7 +74,7 @@ class TestPackageSurface:
 		assert pymididefs.name_to_note is pymididefs.notes.name_to_note
 
 	def test_version_is_a_string (self) -> None:
-		"""__version__ resolves whether or not the package was pip-installed."""
+		"""__version__ is always a non-empty string."""
 		assert isinstance(pymididefs.__version__, str)
 		assert pymididefs.__version__
 
@@ -92,3 +95,15 @@ class TestNoDependencies:
 
 		assert unconditional == [], f"these would be installed for everybody: {unconditional}"
 
+	def test_pyproject_declares_no_runtime_dependencies (self) -> None:
+		"""The next build's source agrees, whatever the installed metadata says.
+
+		Installed metadata can be stale: an editable install keeps what was true
+		when it was made, so the test above can pass against an old copy.
+		pyproject.toml is what the next build reads.
+		"""
+		tomllib = pytest.importorskip("tomllib")
+		pyproject = pathlib.Path(__file__).resolve().parent.parent / "pyproject.toml"
+		project = tomllib.loads(pyproject.read_text())["project"]
+
+		assert project.get("dependencies", []) == []

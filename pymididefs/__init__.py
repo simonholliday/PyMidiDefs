@@ -1,18 +1,19 @@
 """PyMidiDefs — comprehensive MIDI 1.0 and 2.0 constant definitions for Python.
 
-A zero-dependency reference library covering the MIDI 1.0 Detailed Specification,
-General MIDI Level 1, Universal MIDI Packet (UMP) format, and MIDI-CI.
+A zero-dependency reference library covering the MIDI 1.0 Detailed Specification
+and its addenda, General MIDI Levels 1 and 2, Standard MIDI Files, the Universal
+MIDI Packet (UMP) format, and MIDI-CI.
 
 Modules
 -------
 notes   — MIDI note numbers and name/number conversion.
 cc      — Control Change number assignments and 14-bit pack/unpack helpers.
-rpn     — Standard Registered Parameter Numbers and the 14-bit parameter conventions shared with NRPN.
+rpn     — Registered Parameter Numbers, including MPE and the 3D Sound Controllers, and the 14-bit parameter conventions shared with NRPN.
 drums   — General MIDI percussion key map: GM Level 1, plus the extended GS/GM2 sounds.
 gm      — General MIDI Level 1 instrument program numbers and families.
 status  — MIDI 1.0 status bytes (channel voice, system common, system real-time).
-meta    — Standard MIDI File meta-event type bytes, including the ones only real files carry.
-ump     — MIDI 2.0 Universal MIDI Packet message types and constants.
+meta    — Standard MIDI File meta-event type bytes, including RP-019, RP-032 and the obsolete MIDI Port event.
+ump     — MIDI 2.0 Universal MIDI Packet message types and constants, including Flex Data.
 ci      — MIDI 2.0 Capability Inquiry (MIDI-CI) constants.
 """
 

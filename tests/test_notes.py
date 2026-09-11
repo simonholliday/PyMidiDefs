@@ -8,7 +8,7 @@ import pymididefs.notes
 class TestNoteConstants:
 
 	def test_c4_is_middle_c (self) -> None:
-		"""C4 = 60 per MMA standard."""
+		"""Middle C is note 60, which the specifications fix; this library names it C4."""
 		assert pymididefs.notes.C4 == 60
 
 	def test_a4_is_concert_pitch (self) -> None:
