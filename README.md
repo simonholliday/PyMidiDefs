@@ -18,39 +18,18 @@ assignments, program change values, status bytes. These numbers are defined
 by the MIDI specification and never change, yet most projects end up
 re-defining them from scratch or copying them from unreliable sources.
 
-PyMidiDefs gives you a single package with every protocol constant taken
-directly from the official MIDI specifications. It has no runtime dependencies
-and works with any MIDI library or framework -- python-rtmidi, mido, pygame.midi,
-or your own socket-level implementation.
+PyMidiDefs gives you a single, authoritative package with every constant
+sourced directly from the official MIDI specifications. It
+has no runtime dependencies and works with any MIDI library or framework --
+python-rtmidi, mido, pygame.midi, or your own socket-level implementation.
 
-It also carries **instrument definitions**: what a *particular model* of synth
-or drum machine answers to. Those are a different kind of claim, and the next
-section says how they differ.
-
-## Two kinds of fact
-
-Most of this package holds **specification** facts. CC 7 is Volume; note 60 is
-C4. They are true for everybody, permanently, they are transcribed from
-published standards, and they cannot be wrong about the world.
-
-`pymididefs.instruments` holds **model** facts. A Minitaur ignores notes above
-72; a Matriarch's CC 94 switches it between one, two and four voices. They are
-true for everybody who owns that model, and they change when the manufacturer
-ships firmware.
-
-The difference matters when you are deciding how much to trust a number. **A
-model fact is a report, and reports are wrong in the wild.** For one parameter
-on one common synth -- the Minitaur's key priority -- the manual, the firmware
-addendum, and the `.midnam` file everybody shares give three different answers.
-So every instrument definition carries a `source` saying which manual and which
-page it came from, and one imported automatically stays marked `unverified`
-until a person has checked it. [Sources](#sources), below, says where each of
-the bundled ones came from and gives that Minitaur disagreement in full.
-
-**Rig facts are not here and never will be.** Which channel *your* Minitaur is
-on, which port it is plugged into, which notes you have chosen to play -- those
-belong to your own project, not to a definition shared by everyone who owns the
-same box.
+It holds only what the specifications define. What a *particular model* of
+synth or drum machine answers to -- its controls, its note range, its voicing --
+is a different kind of fact, read out of manufacturers' manuals rather than
+transcribed from a standard, and it lives in
+[PyMidiInstrumentDefs](https://github.com/simonholliday/PyMidiInstrumentDefs),
+which builds on this package. Version 0.4.0 carried it here as
+`pymididefs.instruments`.
 
 ## About MIDI
 
@@ -86,13 +65,6 @@ pip install pymididefs
 
 Requires Python 3.10 or later. There are no runtime dependencies.
 
-Reading instrument definitions needs a YAML parser, which is an optional extra
-so that the base install keeps pulling in nothing:
-
-```bash
-pip install pymididefs[instruments]
-```
-
 To install the latest unreleased code straight from the repository:
 
 ```bash
@@ -112,7 +84,6 @@ pip install git+https://github.com/simonholliday/PyMidiDefs.git
 | `pymididefs.meta` | Standard MIDI File meta-event type bytes, including RP-019 and the obsolete MIDI Port event |
 | `pymididefs.ump` | MIDI 2.0 Universal MIDI Packet message types and constants |
 | `pymididefs.ci` | MIDI 2.0 Capability Inquiry (MIDI-CI) constants |
-| `pymididefs.instruments` | What a particular model of instrument does -- its controls, voicing and note range. Needs the `instruments` extra |
 
 ## Usage
 
@@ -182,61 +153,9 @@ pymididefs.ci.DISCOVERY       # 0x70
 pymididefs.ci.PROFILE_INQUIRY # 0x20
 ```
 
-### Instrument definitions
-
-```python
-import pymididefs.instruments
-
-matriarch = pymididefs.instruments.load("moog_matriarch")
-
-matriarch.voice.voicing_modes            # (1, 2, 4)  switchable voicing
-matriarch.voice.plays_note(60)           # True
-matriarch.controls["glide_type"].kind    # 'choice'
-
-# What to send to put a banded control into a named state. Definitions record
-# the band boundaries as manuals print them; working out the number is this
-# library's job.
-matriarch.controls["glide_type"].value_for("exp")   # 106
-
-pymididefs.instruments.available()       # what is on the search path
-```
-
-Definitions are looked for beside your composition first, then in your own
-library, then in the small set bundled here -- so **a file you drop always beats
-one we shipped**. That is the whole answer to adding your own synth: no index to
-edit, no registration, no pull request. A definition is one self-contained YAML
-file, and you share it by sending it.
-
-The bundled set is deliberately small and is a starting point rather than a
-catalogue. `moog_dfam.yaml` is five lines, because the DFAM has no MIDI at all
-and saying so is worth more than saying nothing.
-
-If your instrument has a `.midnam` file -- Ardour bundles several hundred --
-`pymididefs.instruments.midnam` will start a definition from it:
-
-```python
-import pymididefs.instruments.midnam
-
-draft = pymididefs.instruments.midnam.read_file("Moog_Minitaur.midnam")
-print(pymididefs.instruments.midnam.to_yaml(draft))
-```
-
-What that lands is a **draft**, and it says so in its own first line. MIDNAM
-carries a control map and nothing else -- no polyphony, no note range, no
-velocity response -- and the numbers it does carry are worth checking against
-the manual. It stays marked `unverified` until you replace the `source` line
-with what you checked it against.
-
-**This is not how the bundled definitions were made.** Those came from manuals,
-and none of them is an import. [Sources](#sources) measures how far a `.midnam`
-can be trusted, on the one instrument where both can be compared.
-
 ## Sources
 
-### The protocol constants
-
-Every constant in `notes`, `cc`, `rpn`, `drums`, `gm`, `status`, `meta`, `ump`
-and `ci` is transcribed from the official MIDI specifications published by
+All definitions are sourced from the official MIDI specifications published by
 the [MIDI Association](https://midi.org/specs):
 
 - [MIDI 1.0 Detailed Specification](https://midi.org/midi-1-0-detailed-specification) (MMA/AMEI)
@@ -248,72 +167,6 @@ the [MIDI Association](https://midi.org/specs):
 
 Some specifications require a free [MIDI Association membership](https://midi.org/membership)
 to download.
-
-Where a module carries anything from outside those documents it says so in its
-own docstring. `pymididefs.meta` is the one that does: it holds two Standard
-MIDI File meta-events that no specification defines, because real files contain
-them and a reader that does not know them fails on ordinary input.
-
-### The instrument definitions
-
-These come from somewhere else, and it matters which. **A definition is only as
-good as its `source` line, and that line is the authority -- not this README.**
-
-```python
-matriarch = pymididefs.instruments.load("moog_matriarch")
-
-matriarch.source        # the manual and the pages, in the file's own words
-matriarch.is_unverified # True if nobody has checked it yet
-matriarch.warnings      # what the validator thought worth saying
-```
-
-The definitions bundled here were read out of **manufacturers' own user
-manuals**, page by page, and each names the manual and the pages it came from.
-Two of the four were checked against a second source as well: the Minitaur
-against Moog's firmware v2.1 addendum, and the DRM1's note map against a working
-implementation of the same machine.
-
-**None of them was imported from a `.midnam` file, and none ever will be.** The
-importer described below is a tool for starting a definition of *your*
-instrument; it is not where ours come from.
-
-Three tests hold that line, so it is a property of the package rather than a
-promise in a README: one refuses to ship a definition that does not name a
-document and cite pages, one refuses anything still marked `unverified`, and one
-refuses anything the importer wrote.
-
-The Minitaur is the worked example of why that second source matters. Its
-manual prints the key-priority bands as `0-42`, `43-84`, `87-127` -- leaving 85
-and 86 assigned to nothing -- and the firmware addendum corrects the third band
-to **86**. This package carries 86, and the file says why it differs from the
-printed table. That is the level of care every bundled definition is held to,
-and it is why a `source` line records pages rather than saying "the manual".
-
-**Anything imported is a draft, and is not held to that at all.**
-`pymididefs.instruments.midnam` starts a definition from a `.midnam` file, and
-what it lands says `imported from <file>, unverified` in its own source line,
-keeps saying it, and is reported by the validator until a person replaces it.
-
-That is not a reason to avoid importing -- it is a good way to start and a poor
-place to stop, and it is worth being precise about which. Comparing the widely
-shared `Moog_Minitaur.midnam` against the same instrument's manual and firmware
-addendum, on the one instrument where this package holds both:
-
-- **all 37 control-change numbers agree**, and
-- **all 17 14-bit pairings agree**, which is the tedious half of a definition and
-  the half most easily mistyped by hand;
-- **4 of the 11 comparable band boundaries differ**, including the key-priority
-  band it gives as `85` where the manual says `87` and the addendum says `86`.
-
-None of those four changes what gets *sent*, because a band is transmitted as its
-midpoint rather than its edge. They do change what gets *read back*: ask that
-imported definition what a value of 85 means on key priority and it says `last`,
-where the corrected file says `high`. So an import is reliable about which
-controller does what, and not yet reliable about what its values mean.
-
-**And a definition you supply yourself is yours.** Files you drop beside your
-composition or into your own library beat the ones bundled here, by design, and
-this package makes no claim about where their numbers came from.
 
 ## License
 

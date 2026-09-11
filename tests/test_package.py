@@ -3,11 +3,6 @@
 import importlib
 import importlib.metadata
 import pkgutil
-import subprocess
-import sys
-import typing
-
-import pytest
 
 import pymididefs
 
@@ -16,7 +11,7 @@ def _modules () -> list[str]:
 
 	"""Every module in the package, derived rather than listed.
 
-	Derived on purpose: the previous version of this file named nine modules by
+	Derived on purpose: an earlier version of this file named nine modules by
 	hand, which worked until there were ten. A guard that silently stops
 	covering new code is worse than no guard, because it is trusted.
 	"""
@@ -81,14 +76,13 @@ class TestPackageSurface:
 		assert pymididefs.__version__
 
 
-class TestBaseInstall:
+class TestNoDependencies:
 
-	"""The base install pulls in nothing, and nothing else here can check that.
+	"""Installing this package installs nothing else.
 
-	Instrument definitions are read with a YAML parser that ships as an optional
-	extra. The property this protects is that ``import pymididefs`` still works,
-	and still pulls in nothing, for somebody who installed the base package —
-	so these tests are the whole verification, and they run either way.
+	A constants package that pulled in a MIDI library, or anything at all, would
+	be unusable by somebody who had already chosen a different one. The README
+	promises this, and nothing but this test checks it.
 	"""
 
 	def test_the_package_declares_no_runtime_dependencies (self) -> None:
@@ -98,32 +92,3 @@ class TestBaseInstall:
 
 		assert unconditional == [], f"these would be installed for everybody: {unconditional}"
 
-	def test_importing_the_package_never_needs_a_yaml_parser (self) -> None:
-		"""Proved in a fresh interpreter with the parser made unimportable.
-
-		In-process this would only prove that something else had already
-		imported it.
-		"""
-		code = (
-			"import sys; sys.modules['yaml'] = None; "
-			"import pymididefs, pymididefs.instruments; "
-			"print(pymididefs.instruments.load.__name__)"
-		)
-		finished = subprocess.run(
-			[sys.executable, "-c", code], capture_output = True, text = True, check = False)
-
-		assert finished.returncode == 0, finished.stderr
-		assert finished.stdout.strip() == "load"
-
-	def test_reading_a_definition_without_one_names_the_extra (
-		self, monkeypatch: pytest.MonkeyPatch,
-	) -> None:
-		"""The error has to say what to install, because that is the whole fix."""
-		import pymididefs.instruments
-
-		monkeypatch.setitem(sys.modules, "yaml", typing.cast(typing.Any, None))
-
-		with pytest.raises(ImportError) as raised:
-			pymididefs.instruments.parse("definition: 1", source = "x.yaml")
-
-		assert "pip install pymididefs[instruments]" in str(raised.value)

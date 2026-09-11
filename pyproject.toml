@@ -35,16 +35,9 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-# Reading instrument definitions needs a YAML parser. It is an extra rather
-# than a dependency so that `import pymididefs` keeps pulling in nothing at
-# all, which is the promise the rest of the package is built on.
-instruments = [
-	"PyYAML>=6.0",
-]
 dev = [
 	"pytest",
 	"mypy",
-	"types-PyYAML",
 ]
 
 [project.urls]
