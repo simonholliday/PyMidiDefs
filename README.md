@@ -20,11 +20,11 @@ re-defining them from scratch or copying them from unreliable sources.
 
 PyMidiDefs gives you a single, authoritative package with every protocol
 constant taken directly from the official MIDI specifications. It has no
-runtime dependencies and works with any MIDI library or framework --
+runtime dependencies and works with any MIDI library or framework -
 python-rtmidi, mido, pygame.midi, or your own socket-level implementation.
 
 It holds only what the specifications define. What a *particular model* of
-synth or drum machine answers to -- its controls, its note range, its voicing --
+synth or drum machine answers to - its controls, its note range, its voicing -
 is a different kind of fact, read out of manufacturers' manuals rather than
 transcribed from a standard, and it lives in
 [PyMidiInstrumentDefs](https://github.com/simonholliday/PyMidiInstrumentDefs),
@@ -36,13 +36,13 @@ which builds on this package. Version 0.4.0 carried it here as
 MIDI (Musical Instrument Digital Interface) is a technical standard for
 communication between electronic musical instruments, computers, and audio
 devices. It began in 1981, when Ikutaro Kakehashi of Roland proposed an
-international standard for synthesizers to talk to each other, and Dave Smith
-of Sequential Circuits outlined a Universal Synthesizer Interface, developed
-with Chet Wood and presented to the Audio Engineering Society that autumn. The
-MIDI 1.0 specification was published in August 1983,
-with its copyright assigned to the International MIDI Association (IMA) --
-one of three bodies, with the MIDI Manufacturers Association (MMA) and Japan's
-JMSC, that formed independently to manage MIDI's development. It has remained
+international standard for synthesisers to talk to each other, and Dave Smith
+of Sequential Circuits outlined a universal synthesiser interface, the USI,
+developed with Chet Wood and presented to the Audio Engineering Society that
+autumn. The MIDI 1.0 specification was published in August 1983, with its
+copyright assigned to the International MIDI Association (IMA) - one of three
+bodies, with the MIDI Manufacturers Association (MMA) and Japan's JMSC, that
+formed independently to manage MIDI's development. It has remained
 backwards-compatible ever since.
 
 General MIDI (GM), standardised in 1991, defined a common set of 128
@@ -52,7 +52,7 @@ one device would sound broadly similar on another. The Standard MIDI File
 to store and exchange MIDI sequences.
 
 In January 2020, the MIDI Association and AMEI adopted the core specifications
-of MIDI 2.0 -- the first major update to the protocol in nearly four decades --
+of MIDI 2.0 - the first major update to the protocol in nearly four decades -
 and published them the following month. MIDI 2.0 introduces the Universal MIDI
 Packet (UMP) format with higher-resolution velocity and controller values,
 per-note controllers, and bidirectional communication via MIDI-CI (Capability
@@ -81,9 +81,9 @@ pip install git+https://github.com/simonholliday/PyMidiDefs.git
 | `pymididefs.notes` | MIDI note numbers (C-1 to G9) and name/number conversion |
 | `pymididefs.cc` | Control Change number assignments (0-127), plus 14-bit pack/unpack helpers |
 | `pymididefs.rpn` | Registered Parameter Numbers (RPN), including MPE and the 3D Sound Controllers, and the 14-bit parameter conventions shared with NRPN |
-| `pymididefs.drums` | General MIDI percussion key map — GM Level 1 (notes 35-81) plus the extended GS/GM2 sounds |
+| `pymididefs.drums` | General MIDI percussion key map - GM Level 1 (notes 35-81) plus the extended GS/GM2 sounds |
 | `pymididefs.gm` | General MIDI Level 1 instrument program numbers and families |
-| `pymididefs.status` | MIDI 1.0 status bytes (channel voice, system common, system real-time) |
+| `pymididefs.status` | MIDI 1.0 status bytes (Channel Voice, System Common, System Real-Time) |
 | `pymididefs.meta` | Standard MIDI File meta-event type bytes, including RP-019, RP-032 and the obsolete MIDI Port event |
 | `pymididefs.ump` | MIDI 2.0 Universal MIDI Packet message types and constants, including Flex Data |
 | `pymididefs.ci` | MIDI 2.0 Capability Inquiry (MIDI-CI) constants |
@@ -134,7 +134,7 @@ pymididefs.rpn.PITCH_BEND_SENSITIVITY  # 0
 pymididefs.rpn.MODULATION_DEPTH_RANGE  # 5  (CA-026; required by GM2)
 pymididefs.rpn.NULL_PARAMETER          # 16383  (sent as MSB=127, LSB=127)
 
-# 14-bit pack/unpack — works for any MIDI 1.0 14-bit value
+# 14-bit pack/unpack - works for any MIDI 1.0 14-bit value
 # (Bank Select, Data Entry, RPN/NRPN parameter numbers, pitch bend, ...)
 pymididefs.cc.pack_14bit(8192)         # (64, 0)   pitch bend centre
 pymididefs.cc.unpack_14bit(64, 0)      # 8192
@@ -165,8 +165,8 @@ Every constant is transcribed from the specifications published by the
 - [General MIDI Level 1 Specification](https://midi.org/general-midi-level-1) (RP-003)
 - [General MIDI 2 Specification](https://midi.org/general-midi-2)
 - [Standard MIDI File 1.0 Specification](https://midi.org/standard-midi-files) (RP-001), with RP-019 (Program Name, Device Name) and RP-032 (XMF Patch Type Prefix)
-- [M2-104-UM v1.1.2 — Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification](https://midi.org/universal-midi-packet-ump-and-midi-2-0-protocol-specification)
-- [M2-101-UM v1.2 — MIDI-CI Specification](https://midi.org/midi-ci-specification). midi.org now serves v1.2.1, which is not publicly readable and has not been compared; the constants here were checked against v1.2
+- [M2-104-UM v1.1.2 - Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification](https://midi.org/universal-midi-packet-ump-and-midi-2-0-protocol-specification)
+- [M2-101-UM v1.2 - MIDI-CI Specification](https://midi.org/midi-ci-specification). midi.org now serves v1.2.1, which is not publicly readable and has not been compared; the constants here were checked against v1.2
 
 Some specifications require a free [MIDI Association membership](https://midi.org/membership)
 to download.
@@ -190,7 +190,7 @@ documents in September 2026.
 
 ## License
 
-MIT -- you are free to use, copy, modify, merge, publish, distribute,
+MIT - you are free to use, copy, modify, merge, publish, distribute,
 sublicense, and sell copies of this software in any project, including
 commercial and closed-source applications. The only requirement is that you include the
 LICENSE file when redistributing the software. See
