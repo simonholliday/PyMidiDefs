@@ -56,7 +56,8 @@ __all__ = [
 	"LOW_WOODBLOCK", "MUTE_CUICA", "OPEN_CUICA", "MUTE_TRIANGLE",
 	"OPEN_TRIANGLE", "SHAKER", "JINGLE_BELL", "BELL_TREE", "CASTANETS",
 	"MUTE_SURDO", "OPEN_SURDO", "GM_DRUM_MAP", "KICK", "SNARE", "CRASH",
-	"RIDE", "GM_DRUM_PRIMARY_ALIASES",
+	"RIDE", "GM_DRUM_PRIMARY_ALIASES", "GM_DRUM_NAMES", "GM2_DRUM_NAME_VARIANTS",
+	"GM1_PERCUSSION_RANGE", "PERCUSSION_CHANNEL", "is_gm_level_1", "SOURCES",
 ]
 
 
@@ -256,3 +257,152 @@ GM_DRUM_PRIMARY_ALIASES: typing.Final[dict[str, int]] = {
 	"crash": CRASH_1,
 	"ride":  RIDE_1,
 }
+
+
+# ── The sounds as their specifications name them ─────────────────────────────
+# The constants above each carry a name in a trailing comment, which no program
+# can read.  These are the same names as data, so a reader can be shown
+# "Acoustic Bass Drum" instead of 35.
+#
+# Each is the name printed by the document that defines that note: General MIDI
+# Level 1 (RP-003, Table 3) for 35–81, and General MIDI 2 (RP-024, Appendix B,
+# STANDARD Set) for the extended sounds either side of them.  GM2 marks
+# mutually exclusive sounds "[EXC1]" and so on; that says how a sound behaves
+# rather than what it is called, and it is not reproduced here.
+#
+# The spellings are the documents' own, inconsistencies included: "Closed Hi
+# Hat" beside "Pedal Hi-Hat" is how RP-003 prints them, and "Hi Bongo" beside
+# "High Timbale" likewise.
+
+GM_DRUM_NAMES: typing.Final[dict[int, str]] = {
+	# Electronic percussion / effects — General MIDI 2
+	HIGH_Q:           "High Q",
+	SLAP:             "Slap",
+	SCRATCH_PUSH:     "Scratch Push",
+	SCRATCH_PULL:     "Scratch Pull",
+	STICKS:           "Sticks",
+	SQUARE_CLICK:     "Square Click",
+	METRONOME_CLICK:  "Metronome Click",
+	METRONOME_BELL:   "Metronome Bell",
+
+	# General MIDI Level 1 — RP-003, Table 3
+	KICK_2:           "Acoustic Bass Drum",
+	KICK_1:           "Bass Drum 1",
+	SIDE_STICK:       "Side Stick",
+	SNARE_1:          "Acoustic Snare",
+	HAND_CLAP:        "Hand Clap",
+	SNARE_2:          "Electric Snare",
+	LOW_FLOOR_TOM:    "Low Floor Tom",
+	HI_HAT_CLOSED:    "Closed Hi Hat",
+	HIGH_FLOOR_TOM:   "High Floor Tom",
+	HI_HAT_PEDAL:     "Pedal Hi-Hat",
+	LOW_TOM:          "Low Tom",
+	HI_HAT_OPEN:      "Open Hi-Hat",
+	LOW_MID_TOM:      "Low-Mid Tom",
+	HIGH_MID_TOM:     "Hi Mid Tom",
+	CRASH_1:          "Crash Cymbal 1",
+	HIGH_TOM:         "High Tom",
+	RIDE_1:           "Ride Cymbal 1",
+	CHINESE_CYMBAL:   "Chinese Cymbal",
+	RIDE_BELL:        "Ride Bell",
+	TAMBOURINE:       "Tambourine",
+	SPLASH_CYMBAL:    "Splash Cymbal",
+	COWBELL:          "Cowbell",
+	CRASH_2:          "Crash Cymbal 2",
+	VIBRASLAP:        "Vibraslap",
+	RIDE_2:           "Ride Cymbal 2",
+	HIGH_BONGO:       "Hi Bongo",
+	LOW_BONGO:        "Low Bongo",
+	MUTE_HIGH_CONGA:  "Mute Hi Conga",
+	OPEN_HIGH_CONGA:  "Open Hi Conga",
+	LOW_CONGA:        "Low Conga",
+	HIGH_TIMBALE:     "High Timbale",
+	LOW_TIMBALE:      "Low Timbale",
+	HIGH_AGOGO:       "High Agogo",
+	LOW_AGOGO:        "Low Agogo",
+	CABASA:           "Cabasa",
+	MARACAS:          "Maracas",
+	SHORT_WHISTLE:    "Short Whistle",
+	LONG_WHISTLE:     "Long Whistle",
+	SHORT_GUIRO:      "Short Guiro",
+	LONG_GUIRO:       "Long Guiro",
+	CLAVES:           "Claves",
+	HIGH_WOODBLOCK:   "Hi Wood Block",
+	LOW_WOODBLOCK:    "Low Wood Block",
+	MUTE_CUICA:       "Mute Cuica",
+	OPEN_CUICA:       "Open Cuica",
+	MUTE_TRIANGLE:    "Mute Triangle",
+	OPEN_TRIANGLE:    "Open Triangle",
+
+	# Triangle and bells above the Level 1 block — General MIDI 2
+	SHAKER:           "Shaker",
+	JINGLE_BELL:      "Jingle Bell",
+	BELL_TREE:        "Bell Tree",
+	CASTANETS:        "Castanets",
+	MUTE_SURDO:       "Mute Surdo",
+	OPEN_SURDO:       "Open Surdo",
+}
+
+
+# ── Where General MIDI 2 spells a Level 1 sound differently ──────────────────
+# GM2 reprints the Level 1 map in its own Appendix B and regularises six of the
+# names, tidying away the inconsistencies RP-003 left.  Somebody reading a GM2
+# device's documentation meets these spellings instead, so both are worth
+# having; ``GM_DRUM_NAMES`` keeps RP-003's, because RP-003 defines those notes.
+#
+# Only the six that differ are here.  For every other note in 35–81 the two
+# documents agree, and for 27–34 and 82–87 only GM2 names the sound at all.
+
+GM2_DRUM_NAME_VARIANTS: typing.Final[dict[int, str]] = {
+	HI_HAT_CLOSED:  "Closed Hi-hat",
+	HI_HAT_PEDAL:   "Pedal Hi-hat",
+	HI_HAT_OPEN:    "Open Hi-hat",
+	HIGH_MID_TOM:   "High Mid Tom",
+	VIBRASLAP:      "Vibra-slap",
+	HIGH_BONGO:     "High Bongo",
+}
+
+
+# ── What General MIDI Level 1 requires, and where ─────────────────────────────
+# RP-003 asks a Level 1 sound generator for "a minimum of 47 preset percussion
+# sounds conforming to the 'GM Percussion Map'", which is notes 35 to 81
+# inclusive.  Everything outside that range in this module is a GS and GM2
+# extension that a Level 1 device need not have.
+
+GM1_PERCUSSION_RANGE: typing.Final[tuple[int, int]] = (35, 81)
+
+# "Key-based Percussion is always on channel 10" (RP-003), counting channels
+# from 1 as the specifications do.  The nibble in a status byte is one less.
+PERCUSSION_CHANNEL = 10
+
+
+def is_gm_level_1 (note: int) -> bool:
+
+	"""Is this note one a General MIDI Level 1 sound generator must have?
+
+	True for 35–81, the GM Percussion Map proper.  False for the GS and GM2
+	extensions this module also carries, and false for any note outside the map
+	entirely — a Level 1 device is not required to make a sound there either.
+
+	>>> is_gm_level_1(36)    # Bass Drum 1
+	True
+	>>> is_gm_level_1(27)    # High Q, a GS/GM2 extension
+	False
+	"""
+
+	lowest, highest = GM1_PERCUSSION_RANGE
+
+	return lowest <= note <= highest
+
+
+# ── Where these facts come from ──────────────────────────────────────────────
+# Each entry is a document and the page that serves it, so a reader can be shown
+# the source of what they are reading.  The URL is empty where there is no
+# public page.
+
+SOURCES: typing.Final[tuple[tuple[str, str], ...]] = (
+	("General MIDI System Level 1 (MMA RP-003), Table 3 — General MIDI Percussion Map",
+	 "https://midi.org/general-midi-level-1"),
+	("General MIDI 2 (MMA RP-024), Appendix B — GM2 Percussion Sound Set, STANDARD Set",
+	 "https://midi.org/general-midi-2"),
+)

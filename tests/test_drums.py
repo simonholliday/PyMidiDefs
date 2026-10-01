@@ -1,5 +1,8 @@
 """Tests for pymididefs.drums — the General MIDI percussion key map."""
 
+import inspect
+import re
+
 import pymididefs.drums
 
 
@@ -86,3 +89,144 @@ class TestPrimaryAliases:
 		"""The bare names stay OUT of GM_DRUM_MAP, which is one name per note."""
 		for name in pymididefs.drums.GM_DRUM_PRIMARY_ALIASES:
 			assert name not in pymididefs.drums.GM_DRUM_MAP
+
+
+class TestDrumNames:
+
+	"""The names the specifications print, declared as data.
+
+	Verified on 2026-10-01 against the documents themselves, not against the
+	comments they were promoted from: all 47 names for 35–81 match RP-003's
+	Table 3, and all 14 for 27–34 and 82–87 match GM2 Appendix B's STANDARD Set.
+	The documents cannot be shipped here, so what these tests hold is the
+	shape — and, below, the agreement between the data and the comments it was
+	read from, so that correcting one without the other fails.
+	"""
+
+	def test_every_note_in_the_key_map_has_a_name (self) -> None:
+		"""A page showing the map must not meet a note with nothing to print."""
+		named = set(pymididefs.drums.GM_DRUM_NAMES)
+		mapped = set(pymididefs.drums.GM_DRUM_MAP.values())
+
+		assert named == mapped, (
+			f"named but not in the key map: {sorted(named - mapped)}; "
+			f"in the key map but unnamed: {sorted(mapped - named)}"
+		)
+
+	def test_the_names_and_the_comments_say_the_same_thing (self) -> None:
+		"""Each constant's trailing comment is the name declared for that note.
+
+		The data was promoted from those comments, so this is what stops the two
+		drifting: an editor who corrects one has to correct the other. The
+		comments are also what a reader of the source sees, and a reference
+		library cannot have its source and its data disagree about a name.
+		"""
+		source = inspect.getsource(pymididefs.drums)
+		commented = {
+			int(value): comment
+			for _, value, comment
+			in re.findall(r"^([A-Z][A-Z0-9_]*)\s*=\s*(\d+)\s*#\s*(.+?)\s*$", source, re.M)
+		}
+
+		assert commented, "no constant comments were found; has the format changed?"
+
+		disagreements = {
+			note: (comment, pymididefs.drums.GM_DRUM_NAMES.get(note))
+			for note, comment in commented.items()
+			if pymididefs.drums.GM_DRUM_NAMES.get(note) != comment
+		}
+
+		assert disagreements == {}, f"comment and name differ: {disagreements}"
+
+	def test_no_name_is_empty_or_padded (self) -> None:
+		"""These are printed verbatim, so stray whitespace would show."""
+		for note, name in pymididefs.drums.GM_DRUM_NAMES.items():
+			assert name == name.strip() != "", f"note {note}: {name!r}"
+			assert "  " not in name, f"note {note}: {name!r}"
+
+	def test_the_specifications_own_inconsistencies_are_preserved (self) -> None:
+		"""RP-003 is not self-consistent, and this map prints what it prints.
+
+		"Closed Hi Hat" has no hyphen where "Pedal Hi-Hat" does, and "Hi Bongo"
+		is abbreviated where "High Timbale" is not. Tidying them would be
+		inventing a specification, so these four are pinned deliberately.
+		"""
+		names = pymididefs.drums.GM_DRUM_NAMES
+
+		assert names[pymididefs.drums.HI_HAT_CLOSED] == "Closed Hi Hat"
+		assert names[pymididefs.drums.HI_HAT_PEDAL] == "Pedal Hi-Hat"
+		assert names[pymididefs.drums.HIGH_BONGO] == "Hi Bongo"
+		assert names[pymididefs.drums.HIGH_TIMBALE] == "High Timbale"
+
+
+class TestGM2NameVariants:
+
+	def test_every_variant_renames_a_level_1_note (self) -> None:
+		"""GM2 only re-spells notes RP-003 already named; it adds none here."""
+		for note in pymididefs.drums.GM2_DRUM_NAME_VARIANTS:
+			assert pymididefs.drums.is_gm_level_1(note), note
+			assert note in pymididefs.drums.GM_DRUM_NAMES, note
+
+	def test_every_variant_actually_differs (self) -> None:
+		"""A variant equal to the Level 1 name would be noise in the data."""
+		for note, variant in pymididefs.drums.GM2_DRUM_NAME_VARIANTS.items():
+			assert variant != pymididefs.drums.GM_DRUM_NAMES[note], note
+
+	def test_the_six_the_documents_disagree_on (self) -> None:
+		"""Measured against both documents on 2026-10-01: exactly these six."""
+		assert pymididefs.drums.GM2_DRUM_NAME_VARIANTS == {
+			42: "Closed Hi-hat",
+			44: "Pedal Hi-hat",
+			46: "Open Hi-hat",
+			48: "High Mid Tom",
+			58: "Vibra-slap",
+			60: "High Bongo",
+		}
+
+
+class TestGMLevel1Range:
+
+	def test_the_range_is_what_rp_003_requires (self) -> None:
+		"""47 sounds, notes 35 to 81, as RP-003 asks of a sound generator."""
+		lowest, highest = pymididefs.drums.GM1_PERCUSSION_RANGE
+
+		assert (lowest, highest) == (35, 81)
+		assert highest - lowest + 1 == 47
+
+	def test_the_predicate_agrees_with_the_range (self) -> None:
+		"""Over every note number, not only the interesting ones."""
+		lowest, highest = pymididefs.drums.GM1_PERCUSSION_RANGE
+
+		for note in range(128):
+			assert pymididefs.drums.is_gm_level_1(note) == (lowest <= note <= highest)
+
+	def test_the_extensions_are_outside_it (self) -> None:
+		"""Everything this module carries beyond the block is GS/GM2."""
+		extensions = {
+			note for note in pymididefs.drums.GM_DRUM_NAMES
+			if not pymididefs.drums.is_gm_level_1(note)
+		}
+
+		assert extensions == set(range(27, 35)) | set(range(82, 88))
+
+	def test_percussion_is_on_channel_10 (self) -> None:
+		"""Counted from 1, as the specifications count channels."""
+		assert pymididefs.drums.PERCUSSION_CHANNEL == 10
+
+
+class TestSources:
+
+	def test_each_source_is_a_title_and_a_url (self) -> None:
+		"""A page prints the pair, so both halves have to be usable."""
+		assert pymididefs.drums.SOURCES
+
+		for title, url in pymididefs.drums.SOURCES:
+			assert title.strip() == title != ""
+			assert url == "" or url.startswith("https://"), url
+
+	def test_both_defining_documents_are_named (self) -> None:
+		"""The names come from two documents, and both are credited."""
+		titles = " ".join(title for title, _ in pymididefs.drums.SOURCES)
+
+		assert "RP-003" in titles
+		assert "RP-024" in titles
