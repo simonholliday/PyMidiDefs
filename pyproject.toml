@@ -60,7 +60,12 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# The package is collected as well as the tests so that --doctest-modules runs
+# the examples in the docstrings.  Before this, they were never executed: a
+# worked example in a package whose whole promise is authority has to be
+# checked, or it drifts exactly as cc.py's omission list once did.
+testpaths = ["tests", "pymididefs"]
+addopts = ["--doctest-modules"]
 
 [tool.mypy]
 strict = true

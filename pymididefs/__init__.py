@@ -15,6 +15,7 @@ status  — MIDI 1.0 status bytes (Channel Voice, System Common, System Real-Tim
 meta    — Standard MIDI File meta-event type bytes, including RP-019, RP-032 and the obsolete MIDI Port event.
 ump     — MIDI 2.0 Universal MIDI Packet message types and constants, including Flex Data.
 ci      — MIDI 2.0 Capability Inquiry (MIDI-CI) constants.
+scaling — Widening and narrowing values between MIDI 1.0 and MIDI 2.0 resolutions, by whichever of the two methods the value calls for.
 """
 
 import importlib.metadata

@@ -87,6 +87,7 @@ pip install git+https://github.com/simonholliday/PyMidiDefs.git
 | `pymididefs.meta` | Standard MIDI File meta-event type bytes, including RP-019, RP-032 and the obsolete MIDI Port event |
 | `pymididefs.ump` | MIDI 2.0 Universal MIDI Packet message types and constants, including Flex Data |
 | `pymididefs.ci` | MIDI 2.0 Capability Inquiry (MIDI-CI) constants |
+| `pymididefs.scaling` | Widening and narrowing values between MIDI 1.0 and MIDI 2.0 resolutions, by whichever of the two methods the value calls for |
 
 ## Usage
 
@@ -156,6 +157,37 @@ pymididefs.ci.DISCOVERY       # 0x70
 pymididefs.ci.PROFILE_INQUIRY # 0x20
 ```
 
+### Scaling between MIDI 1.0 and MIDI 2.0 resolutions
+
+MIDI 2.0 carries the same values at wider resolutions, and the specification
+defines two ways to widen them. Which one applies depends on what the value is,
+not on how wide it is, and the difference is not a rounding error: a 7-bit
+maximum of 127 widens to `0xFFFF` under one method and `0xFE00` under the other.
+
+```python
+import pymididefs.scaling
+import pymididefs.rpn
+
+# The default method, for Control Change, velocity, pitch bend, pressure
+# and NRPN. Minimum, centre and maximum all survive.
+pymididefs.scaling.min_center_max_up(127, 7, 16)     # 0xFFFF
+pymididefs.scaling.min_center_max_up(64, 7, 32)      # 0x80000000  (centre)
+pymididefs.scaling.min_center_max_down(0xAEBA, 16, 7)  # 87
+
+# Zero-extension with rounding: required for Registered Controllers whose
+# index LSB is 0 to 31, which is every RPN this package defines.
+pymididefs.scaling.zero_extension_up(127, 7, 16)       # 0xFE00
+pymididefs.scaling.zero_extension_down(0xFFFF, 16, 7)  # 127, clamped
+
+# Rather than writing that boundary out yourself:
+pymididefs.scaling.rpn_uses_zero_extension(pymididefs.rpn.PITCH_BEND_SENSITIVITY)
+# True
+```
+
+Scaling is not translation. Narrowing a MIDI 2.0 Note On velocity can land on
+0, which in MIDI 1.0 is a Note Off, so a translator has to raise it to 1. The
+module does not do that for you, and its docstring says why.
+
 ## Sources
 
 Every constant is transcribed from the specifications published by the
@@ -167,6 +199,7 @@ Every constant is transcribed from the specifications published by the
 - [Standard MIDI File 1.0 Specification](https://midi.org/standard-midi-files) (RP-001), with RP-019 (Program Name, Device Name) and RP-032 (XMF Patch Type Prefix)
 - [M2-104-UM v1.1.2 - Universal MIDI Packet (UMP) Format and MIDI 2.0 Protocol Specification](https://midi.org/universal-midi-packet-ump-and-midi-2-0-protocol-specification)
 - [M2-101-UM v1.2 - MIDI-CI Specification](https://midi.org/midi-ci-specification). midi.org now serves v1.2.1, which is not publicly readable and has not been compared; the constants here were checked against v1.2
+- [M2-115-U v1.0.2 - MIDI 2.0 Bit Scaling and Resolution](https://midi.org/midi-2-0-bit-scaling-and-resolution), which M2-104-UM names as authoritative on scaling where the two differ, and which they do: M2-104 Appendix D describes one of the two methods
 
 Some specifications require a free [MIDI Association membership](https://midi.org/membership)
 to download.
