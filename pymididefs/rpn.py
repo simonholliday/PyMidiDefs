@@ -27,6 +27,19 @@ registered parameter table.
 
 import typing
 
+# Everything this module defines, and nothing it imports.  A star-import
+# brings the definitions only, and a name added to the module shows up here
+# in the same diff, where a reader can see the public surface change.
+__all__ = [
+	"PARAMETER_MAX", "PITCH_BEND_SENSITIVITY", "CHANNEL_FINE_TUNING",
+	"CHANNEL_COARSE_TUNING", "TUNING_PROGRAM_SELECT", "TUNING_BANK_SELECT",
+	"MODULATION_DEPTH_RANGE", "MPE_CONFIGURATION", "SOUND_3D_AZIMUTH_ANGLE",
+	"SOUND_3D_ELEVATION_ANGLE", "SOUND_3D_GAIN", "SOUND_3D_DISTANCE_RATIO",
+	"SOUND_3D_MAXIMUM_DISTANCE", "SOUND_3D_GAIN_AT_MAXIMUM_DISTANCE",
+	"SOUND_3D_REFERENCE_DISTANCE_RATIO", "SOUND_3D_PAN_SPREAD_ANGLE",
+	"SOUND_3D_ROLL_ANGLE", "NULL_PARAMETER", "RPN_MAP",
+]
+
 
 # ── Parameter number range ───────────────────────────────────────────────────
 # Both RPN and NRPN parameter numbers are 14-bit (0–16383).

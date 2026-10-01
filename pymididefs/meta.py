@@ -34,6 +34,17 @@ Definitions; MMA RP-019 (0x08, 0x09); MMA/AMEI RP-032 (0x60); de facto practice
 (0x21).
 """
 
+# Everything this module defines, and nothing it imports.  A star-import
+# brings the definitions only, and a name added to the module shows up here
+# in the same diff, where a reader can see the public surface change.
+__all__ = [
+	"SEQUENCE_NUMBER", "TEXT", "COPYRIGHT", "TRACK_NAME", "INSTRUMENT_NAME",
+	"LYRIC", "MARKER", "CUE_POINT", "PROGRAM_NAME", "DEVICE_NAME",
+	"CHANNEL_PREFIX", "MIDI_PORT", "END_OF_TRACK", "TEMPO", "SMPTE_OFFSET",
+	"TIME_SIGNATURE", "KEY_SIGNATURE", "XMF_PATCH_TYPE_PREFIX",
+	"SEQUENCER_SPECIFIC",
+]
+
 
 # ── Sequence number (0x00) ───────────────────────────────────────────────────
 

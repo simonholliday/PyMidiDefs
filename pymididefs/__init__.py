@@ -21,6 +21,14 @@ import importlib.metadata
 
 import pymididefs.notes
 
+# What the package itself defines: the two convenience re-exports below.  A
+# module is reached by importing it, as the README shows, so none belongs here:
+# not `importlib`, which is machinery, and not `pymididefs.notes`, which is
+# only bound on the package because this file imports it.
+__all__ = [
+	"note_to_name", "name_to_note",
+]
+
 # Version is derived from the latest git tag at build time via hatch-vcs;
 # `importlib.metadata` then reads it from the installed package metadata.
 # The fallback only fires if someone runs from a raw source checkout without

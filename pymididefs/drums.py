@@ -39,6 +39,26 @@ Channel: 10 (1-indexed) / 9 (0-indexed).
 
 import typing
 
+# Everything this module defines, and nothing it imports.  A star-import
+# brings the definitions only, and a name added to the module shows up here
+# in the same diff, where a reader can see the public surface change.
+__all__ = [
+	"HIGH_Q", "SLAP", "SCRATCH_PUSH", "SCRATCH_PULL", "STICKS", "SQUARE_CLICK",
+	"METRONOME_CLICK", "METRONOME_BELL", "KICK_2", "KICK_1", "SIDE_STICK",
+	"SNARE_1", "HAND_CLAP", "SNARE_2", "LOW_FLOOR_TOM", "HI_HAT_CLOSED",
+	"HIGH_FLOOR_TOM", "HI_HAT_PEDAL", "LOW_TOM", "HI_HAT_OPEN", "LOW_MID_TOM",
+	"HIGH_MID_TOM", "CRASH_1", "HIGH_TOM", "RIDE_1", "CHINESE_CYMBAL",
+	"RIDE_BELL", "TAMBOURINE", "SPLASH_CYMBAL", "COWBELL", "CRASH_2",
+	"VIBRASLAP", "RIDE_2", "HIGH_BONGO", "LOW_BONGO", "MUTE_HIGH_CONGA",
+	"OPEN_HIGH_CONGA", "LOW_CONGA", "HIGH_TIMBALE", "LOW_TIMBALE",
+	"HIGH_AGOGO", "LOW_AGOGO", "CABASA", "MARACAS", "SHORT_WHISTLE",
+	"LONG_WHISTLE", "SHORT_GUIRO", "LONG_GUIRO", "CLAVES", "HIGH_WOODBLOCK",
+	"LOW_WOODBLOCK", "MUTE_CUICA", "OPEN_CUICA", "MUTE_TRIANGLE",
+	"OPEN_TRIANGLE", "SHAKER", "JINGLE_BELL", "BELL_TREE", "CASTANETS",
+	"MUTE_SURDO", "OPEN_SURDO", "GM_DRUM_MAP", "KICK", "SNARE", "CRASH",
+	"RIDE", "GM_DRUM_PRIMARY_ALIASES",
+]
+
 
 # ── Percussion Key Map (notes 27–87) ─────────────────────────────────────────
 # Organised by instrument family for readability.  Notes 35–81 are GM Level 1;

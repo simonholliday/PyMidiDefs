@@ -4,6 +4,7 @@ import importlib
 import importlib.metadata
 import pathlib
 import pkgutil
+import types
 
 import pytest
 
@@ -25,6 +26,24 @@ def _modules () -> list[str]:
 	]
 
 	return [pymididefs.__name__, *found]
+
+
+def _defined_names (module: types.ModuleType) -> set[str]:
+
+	"""Return the public names a module defines, which is never a module.
+
+	``import typing`` leaves ``typing`` in a module's namespace, where a
+	star-import would hand it over. A submodule is the same case: ``cc``
+	appears on the package as soon as anything imports ``pymididefs.cc``, so
+	which submodules are bound there depends on what ran first. A module is
+	reached by importing it, never by star-importing its parent.
+	"""
+
+	return {
+		name
+		for name, value in vars(module).items()
+		if not name.startswith("_") and not isinstance(value, types.ModuleType)
+	}
 
 
 def _int_constants (module_name: str) -> dict[str, int]:
@@ -49,11 +68,12 @@ class TestNoNameCollisions:
 	def test_no_constant_is_defined_in_two_modules (self) -> None:
 		"""One name must mean one thing across the package.
 
-		No module declares ``__all__``, so a caller who star-imports two of them
-		gets whichever came last, silently and in import order. That is only
-		survivable while no name appears twice — a UMP opcode is a nibble and a
-		status byte is a whole byte, so the wrong one is a plausible-looking
-		number rather than an error.
+		Every module declares ``__all__``, so a star-import brings its own
+		definitions and nothing else. Two of them star-imported together still
+		collide on a shared name, though: the caller gets whichever came last,
+		silently and in import order. A UMP opcode is a nibble and a status
+		byte is a whole byte, so the wrong one is a plausible-looking number
+		rather than an error.
 		"""
 		owners: dict[str, list[str]] = {}
 
@@ -107,3 +127,67 @@ class TestNoDependencies:
 		project = tomllib.loads(pyproject.read_text())["project"]
 
 		assert project.get("dependencies", []) == []
+
+
+class TestPublicNames:
+
+	"""Every module declares ``__all__``, and it says what that module defines.
+
+	Star-importing a constants module is a real use rather than a hypothetical
+	one: Subsequence re-exports four of these through shims written that way.
+	Without ``__all__`` such an import also hands over whatever the module
+	imported, and a constant added here lands in the consumer's namespace with
+	nothing in the diff to show it, where it can shadow a name they define
+	themselves.
+
+	The lists are written out rather than computed, so that adding a public name
+	changes ``__all__`` in the same diff and a reader sees the surface move. The
+	tests below are what stop a written list falling behind the module it
+	describes, which a list in a docstring here once did.
+	"""
+
+	def test_every_module_declares_all (self) -> None:
+		"""Nothing is left to the default, which exports whatever is lying about."""
+		missing = [
+			module_name
+			for module_name in _modules()
+			if not hasattr(importlib.import_module(module_name), "__all__")
+		]
+
+		assert missing == [], f"these modules declare no __all__: {missing}"
+
+	def test_every_name_in_all_is_defined (self) -> None:
+		"""A name listed but not defined breaks the star-import for everybody."""
+		for module_name in _modules():
+			module = importlib.import_module(module_name)
+			absent = [name for name in module.__all__ if not hasattr(module, name)]
+
+			assert absent == [], f"{module_name} lists names it does not define: {absent}"
+
+	def test_all_hands_over_nothing_the_module_imported (self) -> None:
+		"""``typing`` is not part of this package's public surface."""
+		for module_name in _modules():
+			module = importlib.import_module(module_name)
+			foreign = [
+				name
+				for name in module.__all__
+				if isinstance(getattr(module, name), types.ModuleType)
+			]
+
+			assert foreign == [], f"{module_name} would hand over: {foreign}"
+
+	def test_all_lists_every_public_definition (self) -> None:
+		"""The written list cannot fall behind the module without this failing.
+
+		This is the test that earns the written-out lists. A constant added to a
+		module and not added to its ``__all__`` would otherwise go unnoticed:
+		the module still works, the star-import simply stops carrying it.
+		"""
+		for module_name in _modules():
+			module = importlib.import_module(module_name)
+			defined = _defined_names(module)
+
+			assert set(module.__all__) == defined, (
+				f"{module_name}: __all__ omits {sorted(defined - set(module.__all__))}, "
+				f"and names {sorted(set(module.__all__) - defined)} that it does not define"
+			)

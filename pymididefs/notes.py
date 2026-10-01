@@ -27,6 +27,31 @@ General MIDI 2 (note 69 is tuned to 440 Hz).
 Note numbering: 0–127 where Middle C = 60.
 """
 
+# Everything this module defines, and nothing it imports.  A star-import
+# brings the definitions only, and a name added to the module shows up here
+# in the same diff, where a reader can see the public surface change.
+__all__ = [
+	"NOTE_CLASSES", "SEMITONE_MAP", "note_to_name", "name_to_note",
+	"NOTE_NAMES", "C_NEG1", "CS_NEG1", "D_NEG1", "DS_NEG1", "E_NEG1", "F_NEG1",
+	"FS_NEG1", "G_NEG1", "GS_NEG1", "A_NEG1", "AS_NEG1", "B_NEG1", "C0", "CS0",
+	"D0", "DS0", "E0", "F0", "FS0", "G0", "GS0", "A0", "AS0", "B0", "C1",
+	"CS1", "D1", "DS1", "E1", "F1", "FS1", "G1", "GS1", "A1", "AS1", "B1",
+	"C2", "CS2", "D2", "DS2", "E2", "F2", "FS2", "G2", "GS2", "A2", "AS2",
+	"B2", "C3", "CS3", "D3", "DS3", "E3", "F3", "FS3", "G3", "GS3", "A3",
+	"AS3", "B3", "C4", "CS4", "D4", "DS4", "E4", "F4", "FS4", "G4", "GS4",
+	"A4", "AS4", "B4", "C5", "CS5", "D5", "DS5", "E5", "F5", "FS5", "G5",
+	"GS5", "A5", "AS5", "B5", "C6", "CS6", "D6", "DS6", "E6", "F6", "FS6",
+	"G6", "GS6", "A6", "AS6", "B6", "C7", "CS7", "D7", "DS7", "E7", "F7",
+	"FS7", "G7", "GS7", "A7", "AS7", "B7", "C8", "CS8", "D8", "DS8", "E8",
+	"F8", "FS8", "G8", "GS8", "A8", "AS8", "B8", "C9", "CS9", "D9", "DS9",
+	"E9", "F9", "FS9", "G9", "DB_NEG1", "EB_NEG1", "GB_NEG1", "AB_NEG1",
+	"BB_NEG1", "DB0", "EB0", "GB0", "AB0", "BB0", "DB1", "EB1", "GB1", "AB1",
+	"BB1", "DB2", "EB2", "GB2", "AB2", "BB2", "DB3", "EB3", "GB3", "AB3",
+	"BB3", "DB4", "EB4", "GB4", "AB4", "BB4", "DB5", "EB5", "GB5", "AB5",
+	"BB5", "DB6", "EB6", "GB6", "AB6", "BB6", "DB7", "EB7", "GB7", "AB7",
+	"BB7", "DB8", "EB8", "GB8", "AB8", "BB8", "DB9", "EB9", "GB9",
+]
+
 
 # ── Chromatic pitch classes ──────────────────────────────────────────────────
 # Indexed by semitone offset within an octave (0 = C, 11 = B).

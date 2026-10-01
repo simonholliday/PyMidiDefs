@@ -16,6 +16,17 @@ Change (0xB0) with controller numbers 120–127, and live in ``pymididefs.cc``.
 Source: MIDI 1.0 Detailed Specification, Table I — Summary of Status Bytes.
 """
 
+# Everything this module defines, and nothing it imports.  A star-import
+# brings the definitions only, and a name added to the module shows up here
+# in the same diff, where a reader can see the public surface change.
+__all__ = [
+	"NOTE_OFF", "NOTE_ON", "POLY_AFTERTOUCH", "CONTROL_CHANGE",
+	"PROGRAM_CHANGE", "CHANNEL_AFTERTOUCH", "PITCH_BEND", "SYSEX_START",
+	"TIME_CODE", "SONG_POSITION", "SONG_SELECT", "TUNE_REQUEST", "SYSEX_END",
+	"TIMING_CLOCK", "START", "CONTINUE", "STOP", "ACTIVE_SENSING",
+	"SYSTEM_RESET",
+]
+
 
 # ── Channel Voice Messages (0x80–0xEF) ──────────────────────────────────────
 # Upper nibble = message type, lower nibble = channel (0–15).
