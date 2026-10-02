@@ -60,12 +60,16 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-# The package is collected as well as the tests so that --doctest-modules runs
-# the examples in the docstrings.  Before this, they were never executed: a
-# worked example in a package whose whole promise is authority has to be
-# checked, or it drifts exactly as cc.py's omission list once did.
-testpaths = ["tests", "pymididefs"]
-addopts = ["--doctest-modules"]
+# Only the tests are collected.  The examples in the package's docstrings, and
+# the ones in README.md, are run by tests/test_docstrings.py rather than by
+# putting --doctest-modules here: collecting the package directory as well
+# breaks the invocations a packager uses -- `--import-mode=append` against an
+# installed wheel stops on import-file-mismatch errors, `--import-mode=importlib`
+# silently tests the installed copy instead of the checkout, `-p no:doctest`
+# becomes a usage error, and pytest before 7.2 aborts if the source directory
+# is absent.  A test in tests/ has none of those problems and runs the same
+# examples whichever way pytest is invoked.
+testpaths = ["tests"]
 
 [tool.mypy]
 strict = true

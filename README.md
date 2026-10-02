@@ -180,13 +180,17 @@ pymididefs.scaling.zero_extension_up(127, 7, 16)       # 0xFE00
 pymididefs.scaling.zero_extension_down(0xFFFF, 16, 7)  # 127, clamped
 
 # Rather than writing that boundary out yourself:
-pymididefs.scaling.rpn_uses_zero_extension(pymididefs.rpn.PITCH_BEND_SENSITIVITY)
-# True
+pymididefs.rpn.PITCH_BEND_SENSITIVITY  # 0, so its index LSB is 0
+pymididefs.scaling.rpn_uses_zero_extension(0)  # True
 ```
 
-Scaling is not translation. Narrowing a MIDI 2.0 Note On velocity can land on
-0, which in MIDI 1.0 is a Note Off, so a translator has to raise it to 1. The
-module does not do that for you, and its docstring says why.
+Scaling is not translation, and a velocity of zero bites in both directions.
+Narrowing a MIDI 2.0 Note On velocity can land on 0, which in MIDI 1.0 means
+Note Off, so a translator has to raise it to 1. Widening a MIDI 1.0 Note On
+whose velocity is already 0 is worse: that message *is* a Note Off, and M2-104
+says it shall become a MIDI 2.0 Note Off with velocity 0x8000, not a Note On
+with a widened velocity. A bridge that just scales the value leaves the note
+sounding for ever. The module does neither for you, and its docstring says why.
 
 ## Sources
 

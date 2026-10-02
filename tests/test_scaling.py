@@ -4,6 +4,8 @@ Every numeric vector here is one M2-115-U v1.0.2 prints, named by the table it
 comes from, so a failure says which published example stopped matching.
 """
 
+import typing
+
 import pytest
 
 import pymididefs.rpn
@@ -46,9 +48,16 @@ TABLE_10 = [
 # M2-104-UM v1.1.2 Appendix D.1.3 prints these four for the same method.
 APPENDIX_D = [(10, 0x1400), (64, 0x8000), (87, 0xAEBA), (127, 0xFFFF)]
 
-# Every width pair a MIDI 1.0 value is widened across in practice: 7-bit
-# controllers and velocities, and 14-bit RPNs and pitch bend.
-WIDTH_PAIRS = [(7, 16), (7, 32), (14, 32), (16, 32)]
+# Width pairs a MIDI 1.0 value is widened across in practice: 7-bit controllers
+# and velocities, 14-bit Registered Controllers and pitch bend, and the 14-bit
+# high-resolution velocity of CA-031 widened to MIDI 2.0's 16-bit velocity.
+#
+# (14, 16) and (7, 8) are here for a second reason. The bit-repeat fill has two
+# arms, and which one runs depends on whether the widening is wider than the
+# bits there are to repeat. Every published vector and every other pair here
+# takes the left-shift arm; without a narrow pair the right-shift arm is never
+# executed at all, and a regression in it would ship green.
+WIDTH_PAIRS = [(7, 16), (7, 32), (14, 32), (16, 32), (14, 16), (7, 8)]
 
 
 class TestMinCenterMaxPublishedVectors:
@@ -337,3 +346,328 @@ class TestRejectedArguments:
 
 		with pytest.raises(ValueError):
 			pymididefs.scaling.rpn_uses_zero_extension(-1)
+
+
+class _Saboteur:
+
+	"""An integer-like object whose every operator fails.
+
+	Only ``__index__`` works. If any scaling function does arithmetic on the
+	argument it was handed, rather than on the integer it converted that
+	argument to, one of these raises and says so.
+
+	This is what a fixed-width integer does wrong without the conversion, with
+	the failure made loud instead of silent: a NumPy ``uint8`` shifted left by
+	nine does not grow, it wraps, and nothing complains.
+	"""
+
+	def __init__ (self, value: int) -> None:
+		self._value = value
+
+	def __index__ (self) -> int:
+		return self._value
+
+	def _refuse (self, *_: object) -> typing.NoReturn:
+		raise AssertionError("an argument was used without being converted to int")
+
+	__lshift__ = __rlshift__ = __rshift__ = __rrshift__ = _refuse
+	__add__ = __radd__ = __sub__ = __rsub__ = _refuse
+	__and__ = __rand__ = __or__ = __ror__ = _refuse
+	__le__ = __lt__ = __ge__ = __gt__ = _refuse
+
+
+class TestIntegerConversion:
+
+	"""Any integer is accepted, converted, and nothing else is.
+
+	A caller reading MIDI bytes with ``numpy.frombuffer`` holds fixed-width
+	integers, and the arithmetic here wraps on those instead of growing. Before
+	the conversion, a ``uint8`` velocity widened 7 to 16 bits returned 32
+	instead of 51492, narrowing a ``uint16`` maximum returned 0 instead of
+	clamping, and two signed cases did not return at all: the bit-repeat fill
+	reached the sign bit, and an arithmetic right shift of a negative number
+	settles at -1 rather than emptying.
+	"""
+
+	@pytest.mark.parametrize("scale, args", [
+		(pymididefs.scaling.min_center_max_up, (87, 7, 16)),
+		(pymididefs.scaling.min_center_max_down, (0xAEBA, 16, 7)),
+		(pymididefs.scaling.zero_extension_up, (127, 7, 16)),
+		(pymididefs.scaling.zero_extension_down, (0xFFFF, 16, 7)),
+	])
+	def test_arithmetic_never_touches_the_argument (self, scale: object, args: tuple[int, int, int]) -> None:
+		"""Every argument is converted first, and the conversion is what is used."""
+		assert callable(scale)
+		value, src_bits, dst_bits = args
+
+		assert scale(_Saboteur(value), src_bits, dst_bits) == scale(*args)
+		assert scale(value, _Saboteur(src_bits), dst_bits) == scale(*args)
+		assert scale(value, src_bits, _Saboteur(dst_bits)) == scale(*args)
+
+	@pytest.mark.parametrize("scale, args", [
+		(pymididefs.scaling.min_center_max_up, (87, 7, 16)),
+		(pymididefs.scaling.min_center_max_down, (0xAEBA, 16, 7)),
+		(pymididefs.scaling.zero_extension_up, (127, 7, 16)),
+		(pymididefs.scaling.zero_extension_down, (0xFFFF, 16, 7)),
+	])
+	def test_the_result_is_always_a_plain_int (self, scale: object, args: tuple[int, int, int]) -> None:
+		"""A fixed-width argument must not make the return value fixed-width too."""
+		assert callable(scale)
+		value, src_bits, dst_bits = args
+
+		assert type(scale(_Saboteur(value), src_bits, dst_bits)) is int
+
+	def test_the_chooser_converts_too (self) -> None:
+		"""rpn_uses_zero_extension masks its argument, so it converts first."""
+		assert pymididefs.scaling.rpn_uses_zero_extension(_Saboteur(0))
+		assert not pymididefs.scaling.rpn_uses_zero_extension(_Saboteur(127))
+
+	@pytest.mark.parametrize("not_an_integer", [0.5, 1.0, "7", None, [7], 7j])
+	def test_anything_that_is_not_an_integer_is_refused (self, not_an_integer: object) -> None:
+		"""Including in the one-bit path, which returns before any arithmetic.
+
+		``min_center_max_up(0.5, 1, 16)`` used to return 65535: the one-bit rule
+		only asks whether the value is zero, so a float sailed through a range
+		check that compares but never converts.
+		"""
+		with pytest.raises(TypeError):
+			pymididefs.scaling.min_center_max_up(not_an_integer, 1, 16)   # type: ignore[arg-type]
+
+		with pytest.raises(TypeError):
+			pymididefs.scaling.min_center_max_up(not_an_integer, 7, 16)   # type: ignore[arg-type]
+
+		with pytest.raises(TypeError):
+			pymididefs.scaling.zero_extension_down(0, 16, not_an_integer)  # type: ignore[arg-type]
+
+		with pytest.raises(TypeError):
+			pymididefs.scaling.rpn_uses_zero_extension(not_an_integer)     # type: ignore[arg-type]
+
+	def test_bool_is_an_integer_and_is_allowed (self) -> None:
+		"""bool subclasses int, so refusing it would be inventing a rule."""
+		assert pymididefs.scaling.min_center_max_up(True, 1, 16) == 0xFFFF
+		assert pymididefs.scaling.min_center_max_up(False, 1, 16) == 0
+
+
+class TestNumpyIntegers:
+
+	"""The real case the conversion is for, where NumPy is installed.
+
+	Skipped rather than required: this package has no dependencies and is not
+	about to gain one for a test. The Saboteur tests above hold the same
+	invariant without NumPy; these prove it against the type that prompted it.
+	"""
+
+	def test_widening_a_numpy_scalar_gives_the_same_answer_as_an_int (self) -> None:
+		numpy = pytest.importorskip("numpy")
+
+		for dtype in (numpy.uint8, numpy.int8, numpy.uint16, numpy.int16, numpy.int32):
+			if numpy.iinfo(dtype).max < 127:
+				continue
+
+			widened = pymididefs.scaling.min_center_max_up(dtype(87), 7, 16)
+
+			assert widened == 0xAEBA, dtype
+			assert type(widened) is int, dtype
+
+	def test_narrowing_a_numpy_maximum_still_clamps (self) -> None:
+		numpy = pytest.importorskip("numpy")
+
+		assert pymididefs.scaling.zero_extension_down(numpy.uint16(0xFFFF), 16, 7) == 127
+		assert pymididefs.scaling.zero_extension_down(numpy.uint32(0xFFFFFFFF), 32, 14) == 16383
+
+	def test_a_word_read_from_a_buffer_widens_correctly (self) -> None:
+		"""The path that found this: MIDI bytes read straight into NumPy."""
+		numpy = pytest.importorskip("numpy")
+
+		velocity = numpy.frombuffer(bytes([0x90, 0x3C, 0x64]), numpy.uint8)[2]
+
+		assert pymididefs.scaling.min_center_max_up(velocity, 7, 16) == 51492
+		assert pymididefs.scaling.zero_extension_up(numpy.uint16(16383), 14, 32) == 0xFFFC0000
+
+
+class TestWhereTheBitRepeatStarts:
+
+	"""The seam between the two halves of the widening algorithm.
+
+	M2-115 §3.3: "For values from minimum to the center, use simple bit
+	shifting... Use an expanded bit-repeat scheme for the range from center to
+	maximum." Nothing else in this file pins where that changes over. The
+	published vectors step over it, monotonicity holds either side of a seam in
+	the wrong place, and the round trip tolerates any fill at all, because
+	narrowing discards exactly the bits the fill occupies.
+	"""
+
+	@pytest.mark.parametrize("src_bits, dst_bits", WIDTH_PAIRS)
+	def test_up_to_the_centre_it_is_exactly_a_shift (self, src_bits: int, dst_bits: int) -> None:
+		"""Every value from 0 to the centre inclusive, with no fill at all.
+
+		This is the specification's first clause, asserted over the whole lower
+		half rather than sampled. A seam placed below the centre puts a fill on
+		a value that should not have one, and fails here.
+		"""
+		centre = 1 << (src_bits - 1)
+		scale_bits = dst_bits - src_bits
+
+		for value in range(centre + 1):
+			assert pymididefs.scaling.min_center_max_up(value, src_bits, dst_bits) == (
+				value << scale_bits
+			), f"{value} at {src_bits}->{dst_bits}"
+
+	def test_just_above_the_centre_the_fill_is_already_there (self) -> None:
+		"""The first value past the centre is filled, where the fill is nonzero.
+
+		These are computed from §3.3.1's algorithm rather than printed in the
+		document, and each was also worked by hand: for 7 to 16 bits, 65 shifts
+		to 0x8200 and repeats its low six bits, 1, shifted up by three, giving
+		0x8208. A seam one step high returns the bare shift instead.
+		"""
+		assert pymididefs.scaling.min_center_max_up(65, 7, 16) == 0x8208
+		assert pymididefs.scaling.min_center_max_up(0x8001, 16, 32) == 0x80010002
+		assert pymididefs.scaling.min_center_max_up(8193, 14, 32) == 0x80040020
+
+	def test_a_narrow_widening_can_have_no_room_to_repeat (self) -> None:
+		"""Not every value above the centre gets a nonzero fill, and that is right.
+
+		At 7 to 8 bits there is one new bit and six to repeat, so the repeat is
+		shifted down past the end and nothing is filled in. Pinned because it
+		looks like the fill failing, and is not: the maximum still reaches the
+		maximum, which is what §3.2 requires.
+		"""
+		assert pymididefs.scaling.min_center_max_up(65, 7, 8) == 130
+		assert pymididefs.scaling.min_center_max_up(8193, 14, 16) == 32772
+		assert pymididefs.scaling.min_center_max_up(127, 7, 8) == 255
+
+
+class TestZeroExtensionFillsWithZeros:
+
+	"""Zero-extension's whole purpose: no noise in the low bits.
+
+	§4 exists because Min-Center-Max "adds noise to the values in the upper
+	half", and a sender "should not send this noise". A fill of any kind here
+	would be that noise, and the round trip cannot see it -- narrowing rounds,
+	so up to half a step of noise survives a round trip untouched.
+	"""
+
+	@pytest.mark.parametrize("src_bits, dst_bits", WIDTH_PAIRS)
+	def test_the_new_low_bits_are_always_zero (self, src_bits: int, dst_bits: int) -> None:
+		"""Over every value of the narrower resolution, not a sample."""
+		scale_bits = dst_bits - src_bits
+		new_bits = (1 << scale_bits) - 1
+
+		for value in range(1 << src_bits):
+			widened = pymididefs.scaling.zero_extension_up(value, src_bits, dst_bits)
+
+			assert widened & new_bits == 0, f"{value} at {src_bits}->{dst_bits}"
+			assert widened == value << scale_bits
+
+	def test_a_registered_controller_widens_without_noise (self) -> None:
+		"""The case §4 is written for, at the width Registered Controllers use.
+
+		Pitch Bend Sensitivity of 2 semitones is 14-bit 256. Widened to 32 bits
+		it must be 0x04000000 exactly; a fill would make it 0x0401FFFF or
+		similar, which is the noise this method exists to avoid, and the round
+		trip would still map it back to 256.
+		"""
+		assert pymididefs.scaling.zero_extension_up(256, 14, 32) == 0x04000000
+
+	def test_one_bit_lands_halfway_as_documented (self) -> None:
+		"""§4.3 says this method should not be used for one bit, and why.
+
+		A single bit widens to the halfway value rather than the maximum, which
+		is the reason for the recommendation. It is computed rather than
+		refused, because the specification recommends against it and does not
+		forbid it, so the documented behaviour is pinned here.
+		"""
+		assert pymididefs.scaling.zero_extension_up(1, 1, 16) == 0x8000
+		assert pymididefs.scaling.zero_extension_up(0, 1, 16) == 0
+		assert pymididefs.scaling.min_center_max_up(1, 1, 16) == 0xFFFF
+
+
+class TestTheIndexBoundaryInFull:
+
+	"""Every index LSB, not only the ones either side of the boundary.
+
+	§4.1 draws the line at 0-31, and probing a handful of indexes leaves most of
+	the Min-Center-Max side unconstrained: masking with 0x3F instead of 0x7F
+	reclassifies a quarter of all parameter numbers and passes a spot check.
+	"""
+
+	@pytest.mark.parametrize("bank", [0, 1, 61, 63, 127])
+	def test_zero_to_thirty_one_zero_extend (self, bank: int) -> None:
+		for index in range(32):
+			assert pymididefs.scaling.rpn_uses_zero_extension((bank << 7) | index)
+
+	@pytest.mark.parametrize("bank", [0, 1, 61, 63, 127])
+	def test_thirty_two_to_one_hundred_and_twenty_seven_do_not (self, bank: int) -> None:
+		for index in range(32, 128):
+			assert not pymididefs.scaling.rpn_uses_zero_extension((bank << 7) | index)
+
+	def test_every_parameter_number_is_decided_by_its_index_alone (self) -> None:
+		"""All 16384 of them, so no bank can change the answer."""
+		for parameter in range(16384):
+			expected = (parameter % 128) < 32
+
+			assert pymididefs.scaling.rpn_uses_zero_extension(parameter) == expected, parameter
+
+
+class TestTheClaimsTheDocstringsMake:
+
+	"""Prose that states a fact about the data has to be checked like data.
+
+	Each of these is asserted somewhere in this package's docstrings, its
+	comments or its README, in more than one place. A statement repeated in five
+	places and checked in none is how this project's documentation has gone
+	stale before (#1489, #2500).
+	"""
+
+	def test_every_registered_parameter_that_carries_a_value_has_a_low_index (self) -> None:
+		"""The "index LSB is 0–8" claim, which is restated in several places.
+
+		Adding a Registered Parameter whose index LSB is above 8 would make that
+		sentence false everywhere it appears while every other test stayed
+		green. If this fails, the parameter is probably fine and the prose needs
+		correcting.
+		"""
+		for name, parameter in pymididefs.rpn.RPN_MAP.items():
+			if parameter == pymididefs.rpn.NULL_PARAMETER:
+				continue
+
+			assert (parameter & 0x7F) <= 8, (
+				f"{name} ({parameter}) has index LSB {parameter & 0x7F}; "
+				f"the docstrings and README say every one of these is 0–8"
+			)
+
+	def test_the_null_parameter_is_the_only_exception (self) -> None:
+		"""The carve-out the prose now makes, pinned so it stays a carve-out of one."""
+		not_zero_extended = {
+			name for name, parameter in pymididefs.rpn.RPN_MAP.items()
+			if not pymididefs.scaling.rpn_uses_zero_extension(parameter)
+		}
+
+		assert not_zero_extended == {"null_parameter"}
+
+
+class TestM2104PublishedVectors:
+
+	"""The vectors M2-104 prints in its own translation rules.
+
+	Appendix D's four for the upscaling method are already covered above. These
+	come from the Note On rules either side of it, and are worth keeping because
+	they are the specification checking its own arithmetic against a message.
+	"""
+
+	def test_velocity_one_widens_as_d_3_1_says (self) -> None:
+		"""D.3.1: "MIDI Velocity = 0x01: translates to 0x0200"."""
+		assert pymididefs.scaling.min_center_max_up(0x01, 7, 16) == 0x0200
+
+	def test_the_note_off_velocity_d_3_1_requires_is_the_centre (self) -> None:
+		"""D.3.1 sends a translated Note Off at velocity 0x8000, the 16-bit centre.
+
+		Not a scaling rule, and that is the point: no widening of 0 produces
+		0x8000, so a caller cannot reach the specification's answer by scaling.
+		It is pinned here because the module's docstring says so, and because it
+		shows why the two jobs are separate.
+		"""
+		assert pymididefs.scaling.min_center_max_up(0, 7, 16) == 0
+		assert pymididefs.scaling.zero_extension_up(0, 7, 16) == 0
+		assert 0x8000 == 1 << 15
